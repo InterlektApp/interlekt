@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Interlekt design tokens.
+ *
+ * Concept: "the campus, not the classroom" — trust + momentum.
+ * Roles: paper ground, ink text, ONE brand blue accent, line-driven
+ * surfaces. Accent stays under ~10% of any viewport.
+ */
+
+@layer base {
+  :root {
+    /* Ground + surfaces */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    /* Brand — deep lecture-hall blue */
+    --brand-50: 214 100% 97%;
+    --brand-100: 214 95% 93%;
+    --brand-500: 217 91% 60%;
+    --brand-600: 221 83% 53%;
+    --brand-700: 224 76% 48%;
+    --ink: 222 47% 11%;
+
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 60% 95%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 40% 94%;
+    --muted-foreground: 215 20% 42%;
+    --accent: 214 60% 94%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 30% 90%;
+    --input: 214 30% 88%;
+    --ring: 221 83% 53%;
+    --radius: 0.75rem;
+
+    /* Motion — per animation spec, one curve family */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --duration-fast: 150ms;
+    --duration-med: 220ms;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: hsl(var(--brand-100));
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Eyebrow label: 11px caps mono, wide tracking — the hierarchy anchor */
+  .label-eyebrow {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500;
+  }
+
+  /* Card hover lift — feedback, near-imperceptible, hover-capable only */
+  @media (hover: hover) and (pointer: fine) {
+    .lift {
+      transition:
+        transform var(--duration-med) var(--ease-out),
+        box-shadow var(--duration-med) var(--ease-out);
+    }
+    .lift:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 12px 24px -12px rgb(15 23 42 / 0.18),
+        0 4px 8px -4px rgb(15 23 42 / 0.08);
+    }
+  }
+
+  /* Button press feedback */
+  .press {
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+  .press:active {
+    transform: scale(0.98);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* First-view entrance: rare/first-time tier, opacity + slight rise only */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+apps/web/*.log
+dev-server.log
+
+# Env (example file is committed, real values never are)
+apps/web/.env*.local
+apps/web/.env.development.local
+apps/web/.env.test.local
+apps/web/.env.production.local
+.env*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Screenshots (local verification only)
+.openchamber/
