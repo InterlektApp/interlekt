@@ -9,6 +9,8 @@ import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { AuthShell } from "@/components/auth-shell";
 import { GoogleMark } from "@/components/google-mark";
+import { useLogin } from "@/hooks/use-auth";
+import { apiErrorMessage } from "@/lib/api/errors";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -26,36 +28,32 @@ function LoginFormInner() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/dashboard";
   const [serverError, setServerError] = useState<string | null>(null);
-  const [googleBusy, setGoogleBusy] = useState(false);
+
+  const login = useLogin();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = (data: LoginForm) => {
     setServerError(null);
-    try {
-      // Real app: POST /auth/login (cookie set by server), then router.push(next).
-      await new Promise((r) => setTimeout(r, 800));
-      console.log("login", data.email, data.remember ? "(remember me)" : "");
-      router.push(next);
-    } catch {
-      setServerError("Could not sign you in. Check your connection and try again.");
-    }
+    // POST /auth/login → tokens stored by session.ts, then route.
+    login.mutate(
+      { email: data.email, password: data.password },
+      {
+        onSuccess: () => router.push(next),
+        onError: (err) => setServerError(apiErrorMessage(err)),
+      },
+    );
   };
 
-  const continueWithGoogle = async () => {
-    setGoogleBusy(true);
-    try {
-      // Real app: redirect to GET /auth/oauth/google (server starts the OAuth
-      // flow with NEXT_PUBLIC_GOOGLE_CLIENT_ID). Mock: brief pause, then home.
-      await new Promise((r) => setTimeout(r, 900));
-      router.push(next);
-    } finally {
-      setGoogleBusy(false);
-    }
+  const continueWithGoogle = () => {
+    // No backend OAuth endpoint yet — this stays honest: disabled with context.
+    setServerError(
+      "Google sign-in opens with the backend OAuth release. Please use email for now.",
+    );
   };
 
   return (
@@ -116,10 +114,10 @@ function LoginFormInner() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={login.isPending}
           className="press h-12 w-full rounded-full bg-[#0a2f4f] text-[15px] font-medium text-white transition-colors hover:bg-[#134a75] disabled:opacity-60"
         >
-          {isSubmitting ? (
+          {login.isPending ? (
             <span className="inline-flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
               Signing in…
@@ -139,14 +137,9 @@ function LoginFormInner() {
       <button
         type="button"
         onClick={continueWithGoogle}
-        disabled={googleBusy}
-        className="press mx-auto flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-full border border-slate-200 bg-white text-[15px] text-slate-900 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-60"
+        className="press mx-auto flex h-11 w-full max-w-[280px] items-center justify-center gap-2 rounded-full border border-slate-200 bg-white text-[15px] text-slate-900 transition-colors hover:border-slate-300 hover:bg-slate-50"
       >
-        {googleBusy ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <GoogleMark />
-        )}
+        <GoogleMark />
         Continue with Google
       </button>
     </>

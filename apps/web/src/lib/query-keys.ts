@@ -11,43 +11,26 @@ export const qk = {
     all: ["communities"] as const,
     list: (params?: Record<string, unknown>) =>
       ["communities", "list", params ?? {}] as const,
+    mine: (params?: Record<string, unknown>) =>
+      ["communities", "mine", params ?? {}] as const,
     detail: (slug: string) => ["communities", "detail", slug] as const,
-    categories: () => ["communities", "categories"] as const,
-    enrollment: (communityId: string) =>
-      ["communities", "enrollment", communityId] as const,
-    members: (communityId: string, params?: Record<string, unknown>) =>
-      ["communities", "members", communityId, params ?? {}] as const,
-    transactions: (communityId: string, params?: Record<string, unknown>) =>
-      ["communities", "transactions", communityId, params ?? {}] as const,
+    members: (slug: string, params?: Record<string, unknown>) =>
+      ["communities", "members", slug, params ?? {}] as const,
   },
-  courses: {
-    all: ["courses"] as const,
-    list: (communityId: string) => ["courses", "list", communityId] as const,
-    detail: (courseId: string) => ["courses", "detail", courseId] as const,
-  },
-  lessons: {
-    detail: (lessonId: string) => ["lessons", "detail", lessonId] as const,
-  },
-  posts: {
-    all: ["posts"] as const,
-    list: (communityId: string, params?: Record<string, unknown>) =>
-      ["posts", "list", communityId, params ?? {}] as const,
-    detail: (postId: string) => ["posts", "detail", postId] as const,
-    comments: (postId: string, params?: Record<string, unknown>) =>
-      ["posts", "comments", postId, params ?? {}] as const,
+  categories: {
+    all: ["categories"] as const,
   },
   creators: {
     all: ["creators"] as const,
-    detail: (slug: string) => ["creators", "detail", slug] as const,
+    detail: (userId: string) => ["creators", "detail", userId] as const,
+    me: () => ["creators", "me"] as const,
   },
   enrollments: {
-    mine: () => ["enrollments", "mine"] as const,
+    mine: (params?: Record<string, unknown>) =>
+      ["enrollments", "mine", params ?? {}] as const,
   },
-  payments: {
-    status: (reference: string) => ["payments", "status", reference] as const,
-  },
-  dashboard: {
-    creator: () => ["dashboard", "creator"] as const,
+  users: {
+    me: () => ["users", "me"] as const,
   },
   auth: {
     me: () => ["auth", "me"] as const,

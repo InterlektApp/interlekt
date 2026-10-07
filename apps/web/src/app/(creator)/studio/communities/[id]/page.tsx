@@ -1,24 +1,40 @@
+"use client";
+
 import Link from "next/link";
+import { use } from "react";
 import { ArrowLeft, BookOpen, Settings, Users, Wallet } from "lucide-react";
+import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/stat-card";
-import { MOCK_COMMUNITIES } from "@/lib/mocks";
-import { notFound } from "next/navigation";
+import { MoneyAmount } from "@/components/money-amount";
+import { useMyCommunities } from "@/hooks/use-communities";
 
 interface ManagePageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function ManageCommunityPage({ params }: ManagePageProps) {
-  const { id } = await params;
-  const community = MOCK_COMMUNITIES.find((c) => c.id === id);
+export default function ManageCommunityPage({ params }: ManagePageProps) {
+  const { id } = use(params);
+  // Matches by id or slug — manage links use the list item's id.
+  const { data: mine = [], isLoading } = useMyCommunities();
+  const community = mine.find((c) => c.id === id || c.slug === id);
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-3xl animate-pulse px-4 py-8">
+        <div className="h-8 w-2/3 rounded bg-slate-200" />
+        <div className="mt-6 h-40 rounded-xl bg-slate-200" />
+      </div>
+    );
+  }
+
   if (!community) notFound();
 
   const links = [
-    { href: `/studio/communities/${id}/edit`, icon: Settings, label: "Edit community", desc: "Title, description, pricing, access" },
-    { href: `/studio/communities/${id}/course-builder`, icon: BookOpen, label: "Course builder", desc: "Courses, modules, lessons" },
-    { href: `/studio/communities/${id}/members`, icon: Users, label: "Members", desc: `${community.member_count.toLocaleString()} enrolled` },
-    { href: `/studio/communities/${id}/transactions`, icon: Wallet, label: "Transactions", desc: "Revenue and payouts" },
+    { href: `/studio/communities/${community.id}/edit`, icon: Settings, label: "Edit community", desc: "Title, description, pricing, access" },
+    { href: `/studio/communities/${community.id}/course-builder`, icon: BookOpen, label: "Course builder", desc: "Courses, modules, lessons" },
+    { href: `/studio/communities/${community.id}/members`, icon: Users, label: "Members", desc: `${community.memberCount.toLocaleString()} enrolled` },
+    { href: `/studio/communities/${community.id}/transactions`, icon: Wallet, label: "Transactions", desc: "Revenue and payouts" },
   ];
 
   return (
@@ -29,12 +45,19 @@ export default async function ManageCommunityPage({ params }: ManagePageProps) {
           Studio
         </Link>
       </Button>
-      <h1 className="mt-2 text-2xl font-bold text-slate-900">{community.title}</h1>
-      <p className="mt-1 text-sm text-slate-500">Manage everything about this community.</p>
+      <h1 className="mt-2 font-display text-2xl tracking-tight text-slate-900">{community.title}</h1>
+      <p className="mt-1 text-sm text-slate-500">
+        <MoneyAmount
+          priceAmount={community.priceAmount}
+          currency={community.priceCurrency}
+          isFree={community.isFree}
+        />{" "}
+        · {community.isPublished ? "Published" : "Draft"}
+      </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <StatCard label="Members" value={community.member_count.toLocaleString()} />
-        <StatCard label="Rating" value={community.rating?.toFixed(1) ?? "—"} />
+        <StatCard label="Members" value={community.memberCount.toLocaleString()} />
+        <StatCard label="Status" value={community.isPublished ? "Live" : "Draft"} />
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">

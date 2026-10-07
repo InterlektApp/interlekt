@@ -1,42 +1,39 @@
 /**
- * API type stubs — hand-written for the Day-1 contract freeze.
+ * API types — mirror of the Interlekt-backend contract
+ * (InterlektApp/Interlekt-backend, camelCase JSON).
  *
- * These mirror the backend's Pydantic schemas. When the real
- * `/openapi.json` is available, regenerate with `pnpm gen:api` and
- * replace this file. Until then, `tsc` passes with no backend.
+ * Do not invent fields here. If the backend adds a field, add it here
+ * with the exact wire name. If the backend lacks it, it doesn't exist.
  */
-
-// ── Enums ──────────────────────────────────────────────────────────────────
-
-export type Role = "learner" | "creator" | "admin";
-export type VerificationStatus = "unverified" | "pending" | "verified" | "rejected";
-export type BillingPeriod = "one_time" | "monthly";
-export type CommunityStatus = "draft" | "published" | "archived";
-export type EnrollmentStatus = "active" | "expired" | "cancelled";
-export type PaymentStatus = "pending" | "success" | "failed";
 
 // ── Auth ───────────────────────────────────────────────────────────────────
 
-export interface User {
+export type Role = "learner" | "creator" | "admin";
+
+export interface AccountResponse {
   id: string;
   email: string;
-  display_name: string;
-  avatar_url: string | null;
-  role: Role;
-  created_at: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  roles: Role[];
+  isActive: boolean;
+  createdAt: string;
 }
 
-export interface AuthTokens {
-  access_token: string;
-  refresh_token: string;
-  token_type: "bearer";
+export interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: AccountResponse;
 }
 
 export interface RegisterRequest {
   email: string;
   password: string;
-  display_name: string;
-  role: Role;
+  displayName: string;
+  role?: "learner" | "creator";
 }
 
 export interface LoginRequest {
@@ -44,104 +41,188 @@ export interface LoginRequest {
   password: string;
 }
 
-// ── Profiles ───────────────────────────────────────────────────────────────
+// ── Users ──────────────────────────────────────────────────────────────────
 
-export interface Profile {
-  user_id: string;
-  display_name: string;
-  avatar_url: string | null;
-  bio: string | null;
-  interests: string[];
-}
-
-export interface CreatorProfile {
-  user_id: string;
-  display_name: string;
-  avatar_url: string | null;
-  bio: string | null;
-  expertise: string[];
-  verification_status: VerificationStatus;
-  evidence_url: string | null;
-  community_count: number;
-  member_count: number;
-}
-
-// ── Communities ────────────────────────────────────────────────────────────
-
-export interface Community {
+export interface ProfileResponse {
   id: string;
-  slug: string;
-  title: string;
-  description: string;
-  category_id: string;
-  tags: string[];
-  image_url: string | null;
-  creator_id: string;
-  creator: CreatorProfile;
-  price_kobo: number;
-  currency: string;
-  billing_period: BillingPeriod;
-  status: CommunityStatus;
-  member_count: number;
-  rating: number | null;
-  review_count: number;
-  created_at: string;
-  updated_at: string;
-  can_enroll: boolean;
-  enrollment: Enrollment | null;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  roles: Role[];
+  isCreator: boolean;
+  createdAt: string;
 }
 
-export interface CommunityListItem {
-  id: string;
-  slug: string;
-  title: string;
-  category_id: string;
-  image_url: string | null;
-  creator: Pick<CreatorProfile, "display_name" | "avatar_url" | "verification_status">;
-  price_kobo: number;
-  currency: string;
-  billing_period: BillingPeriod;
-  member_count: number;
-  rating: number | null;
+export interface ProfileUpdateRequest {
+  displayName?: string;
+  avatarUrl?: string | null;
+  bio?: string | null;
 }
+
+// ── Categories ─────────────────────────────────────────────────────────────
 
 export interface Category {
   id: string;
   name: string;
   slug: string;
-  icon: string | null;
+  description?: string | null;
 }
 
-// ── Enrollment ─────────────────────────────────────────────────────────────
+// ── Creators ───────────────────────────────────────────────────────────────
 
-export interface Enrollment {
+export type VerificationStatus = "pending" | "verified" | "rejected";
+
+export interface CreatorSummary {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  verificationStatus: VerificationStatus;
+  isVerified: boolean;
+}
+
+export interface CreatorProfileResponse {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  expertise: string[];
+  verificationStatus: VerificationStatus;
+  isVerified: boolean;
+  memberCount: number;
+  communityCount: number;
+  createdAt: string;
+}
+
+// ── Communities ────────────────────────────────────────────────────────────
+
+export interface CommunityListItem {
   id: string;
-  user_id: string;
-  community_id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  imageUrl: string | null;
+  /** Decimal-string major units, e.g. "5000.00". Never a JSON number. */
+  priceAmount: string;
+  priceCurrency: string;
+  isFree: boolean;
+  memberCount: number;
+  isPublished: boolean;
+  categories: Category[];
+  creator: CreatorSummary;
+  createdAt: string;
+}
+
+export interface CourseSummary {
+  id: string;
+  title: string;
+  position: number;
+  moduleCount: number;
+  lessonCount: number;
+  isPublished: boolean;
+}
+
+export interface CommunityDetail extends Omit<CommunityListItem, "excerpt"> {
+  description: string;
+  courses: CourseSummary[];
+  updatedAt: string;
+}
+
+export interface CommunityCreateRequest {
+  title: string;
+  description: string;
+  categoryIds: string[];
+  imageUrl?: string | null;
+  priceAmount?: string;
+}
+
+// ── Enrollments & members ──────────────────────────────────────────────────
+
+export type EnrollmentStatus = "pending" | "active" | "cancelled";
+
+export interface CommunityRef {
+  id: string;
+  title: string;
+  slug: string;
+  imageUrl: string | null;
+  priceAmount: string;
+  priceCurrency: string;
+  isFree: boolean;
+}
+
+export interface EnrollmentResponse {
+  id: string;
+  community: CommunityRef;
   status: EnrollmentStatus;
-  enrolled_at: string;
-  expires_at: string | null;
+  createdAt: string;
+  cancelledAt: string | null;
 }
 
-// ── Courses & Lessons ──────────────────────────────────────────────────────
+export interface MemberResponse {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  status: EnrollmentStatus;
+  joinedAt: string;
+}
 
-export interface Course {
+// ── Pagination & errors ────────────────────────────────────────────────────
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ApiErrorBody {
+  error: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+}
+
+// ── Local-only shapes (no backend endpoint yet) ────────────────────────────
+// Feed posts/comments, lesson bodies, and reviews are rendered from mocks
+// until the backend ships those domains. These types describe the mock
+// content only.
+
+export interface PostAuthor {
+  display_name: string;
+  avatar_url: string | null;
+}
+
+export interface Post {
   id: string;
   community_id: string;
-  title: string;
-  description: string | null;
-  position: number;
-  is_published: boolean;
-  module_count: number;
-  lesson_count: number;
+  author_id: string;
+  author: PostAuthor;
+  content: string;
+  is_pinned: boolean;
+  is_announcement: boolean;
+  like_count: number;
+  comment_count: number;
+  created_at: string;
 }
 
-export interface Module {
+export interface Comment {
   id: string;
-  course_id: string;
-  title: string;
-  position: number;
-  lessons: Lesson[];
+  post_id: string;
+  author_id: string;
+  author: PostAuthor;
+  content: string;
+  created_at: string;
+}
+
+export interface Review {
+  id: string;
+  community_id: string;
+  user_id: string;
+  author: PostAuthor;
+  rating: number;
+  content: string | null;
+  created_at: string;
 }
 
 export interface Lesson {
@@ -155,86 +236,21 @@ export interface Lesson {
   is_completed: boolean;
 }
 
-// ── Feed ───────────────────────────────────────────────────────────────────
+export interface Module {
+  id: string;
+  course_id: string;
+  title: string;
+  position: number;
+  lessons: Lesson[];
+}
 
-export interface Post {
+export interface Course {
   id: string;
   community_id: string;
-  author_id: string;
-  author: Pick<User, "display_name" | "avatar_url">;
-  content: string;
-  is_pinned: boolean;
-  is_announcement: boolean;
-  like_count: number;
-  comment_count: number;
-  created_at: string;
-}
-
-export interface Comment {
-  id: string;
-  post_id: string;
-  author_id: string;
-  author: Pick<User, "display_name" | "avatar_url">;
-  content: string;
-  created_at: string;
-}
-
-// ── Payments ───────────────────────────────────────────────────────────────
-
-export interface Payment {
-  id: string;
-  reference: string;
-  community_id: string;
-  user_id: string;
-  amount_kobo: number;
-  currency: string;
-  platform_fee_kobo: number;
-  creator_amount_kobo: number;
-  status: PaymentStatus;
-  provider: "paystack";
-  provider_reference: string | null;
-  created_at: string;
-}
-
-export interface PaymentInitializeRequest {
-  community_id: string;
-}
-
-export interface PaymentInitializeResponse {
-  reference: string;
-  authorization_url: string;
-  amount_kobo: number;
-  currency: string;
-}
-
-// ── Reviews ────────────────────────────────────────────────────────────────
-
-export interface Review {
-  id: string;
-  community_id: string;
-  user_id: string;
-  author: Pick<User, "display_name" | "avatar_url">;
-  rating: number;
-  content: string | null;
-  created_at: string;
-}
-
-// ── Pagination ─────────────────────────────────────────────────────────────
-
-export interface Paginated<T> {
-  items: T[];
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
-}
-
-// ── Error envelope ─────────────────────────────────────────────────────────
-
-export interface ApiErrorBody {
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
+  title: string;
+  description: string | null;
+  position: number;
+  is_published: boolean;
+  module_count: number;
+  lesson_count: number;
 }

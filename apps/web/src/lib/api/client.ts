@@ -1,10 +1,15 @@
 /**
  * API client — the single place that talks to the backend.
  *
- * Same-origin via Next.js rewrites (see next.config.ts), so cookies flow
- * automatically and CORS never comes up. The browser only ever sees
- * `/api/v1/*`; the rewrite proxies to FastAPI.
+ * Same-origin via Next.js rewrites (see next.config.ts): the browser only
+ * ever sees `/api/v1/*`; the rewrite proxies to FastAPI. Auth rides on
+ * `Authorization: Bearer <access_token>` (see session.ts). On a 401 with a
+ * stored refresh token the client rotates the pair ONCE via
+ * POST /auth/refresh and retries the original request.
  */
+
+import { clearTokens, getAccessToken, getRefreshToken, storeTokens } from "./session";
+import type { TokenResponse } from "@/types/api";
 
 const API_BASE = "/api/v1";
 
@@ -25,23 +30,67 @@ export class ApiError extends Error {
 interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
-  /** Set false for endpoints that must not send credentials (e.g. public pages). */
-  credentials?: boolean;
+  /** Skip the Authorization header (public endpoints work either way). */
+  anonymous?: boolean;
+  /** Skip the refresh-and-retry cycle (used by the refresh call itself). */
+  noRefresh?: boolean;
+}
+
+async function tryRefresh(): Promise<boolean> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+  try {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) {
+      // Reuse (401 refresh_token_reuse) or expiry — session is dead.
+      clearTokens();
+      return false;
+    }
+    const data = (await res.json()) as TokenResponse;
+    storeTokens(data.accessToken, data.refreshToken);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, credentials = true } = options;
+  const { method = "GET", body, anonymous = false, noRefresh = false } = options;
+
+  const send = async (): Promise<Response> => {
+    const headers: Record<string, string> = {};
+    if (body !== undefined) headers["Content-Type"] = "application/json";
+    if (!anonymous) {
+      const token = getAccessToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    }
+    return fetch(`${API_BASE}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  };
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
-      method,
-      credentials: credentials ? "include" : "omit",
-      headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    res = await send();
   } catch {
     throw new ApiError(0, "NETWORK_ERROR", "Could not reach the server. Check your connection.");
+  }
+
+  if (res.status === 401 && !anonymous && !noRefresh && getRefreshToken()) {
+    const rotated = await tryRefresh();
+    if (rotated) {
+      try {
+        res = await send();
+      } catch {
+        throw new ApiError(0, "NETWORK_ERROR", "Could not reach the server. Check your connection.");
+      }
+    }
   }
 
   if (res.status === 204) return undefined as T;

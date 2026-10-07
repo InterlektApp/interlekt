@@ -4,23 +4,23 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MoneyAmount } from "@/components/money-amount";
-import type { Community } from "@/types/api";
+import type { CommunityDetail, EnrollmentResponse } from "@/types/api";
 
 interface EnrollCardProps {
-  community: Community;
+  community: CommunityDetail;
+  /** The viewer's enrollment for this community, if any (from /enrollments/mine). */
+  enrollment?: EnrollmentResponse | null;
+  /** True when a signed-in user owns this community. */
+  isOwner?: boolean;
 }
 
 /**
- * The single most reused component in the product. Four states:
+ * The single most reused component in the product.
  * anonymous → sign-in CTA · not-enrolled → enroll CTA ·
  * already-enrolled → go-to-classroom · owner → manage CTA.
  */
-export function EnrollCard({ community }: EnrollCardProps) {
-  const { enrollment, can_enroll } = community;
-
-  // Owner view — in the real app this comes from auth context.
-  // Mocked here: slug "my-community" is owned by the viewer.
-  if (community.slug === "my-community") {
+export function EnrollCard({ community, enrollment, isOwner = false }: EnrollCardProps) {
+  if (isOwner) {
     return (
       <div className="rounded-xl border bg-white p-6 shadow-sm">
         <p className="text-sm font-medium text-slate-500">You own this community</p>
@@ -48,40 +48,22 @@ export function EnrollCard({ community }: EnrollCardProps) {
     );
   }
 
-  if (!can_enroll) {
-    return (
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-500">
-          Sign in to enroll in this community.
-        </p>
-        <Button className="mt-4 w-full" asChild>
-          <Link href={`/auth/login?next=/communities/${community.slug}`}>Sign in to enroll</Link>
-        </Button>
-      </div>
-    );
-  }
-
-  const isFree = community.price_kobo === 0;
-  const cta =
-    community.billing_period === "monthly" ? "Subscribe" : isFree ? "Join for free" : "Enroll now";
-
   return (
     <div className="rounded-xl border bg-white p-6 shadow-sm">
       <div className="flex items-baseline justify-between">
         <MoneyAmount
-          kobo={community.price_kobo}
-          currency={community.currency}
-          billingPeriod={community.billing_period}
+          priceAmount={community.priceAmount}
+          currency={community.priceCurrency}
+          isFree={community.isFree}
           className="text-2xl"
         />
-        {community.billing_period === "monthly" && (
-          <span className="text-xs text-slate-500">billed monthly · cancel anytime</span>
-        )}
       </div>
       <Button className="mt-4 w-full" size="lg" asChild>
-        <Link href={`/enroll/${community.id}`}>{cta}</Link>
+        <Link href={`/enroll/${community.slug}`}>
+          {community.isFree ? "Join for free" : "Enroll now"}
+        </Link>
       </Button>
-      {!isFree && (
+      {!community.isFree && (
         <p className="mt-3 text-center text-xs text-slate-400">
           Secure payment via Paystack
         </p>

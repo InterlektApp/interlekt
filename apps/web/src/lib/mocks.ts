@@ -1,181 +1,158 @@
 /**
- * Mock data for frontend development — stands in for the FastAPI backend
- * until the Day-1 contract freeze endpoints are live.
+ * Mock data — fallback when the backend is unreachable, and stand-in
+ * content for domains the backend hasn't shipped yet (feed, lessons,
+ * reviews, payments).
  *
- * Every mock matches the types in @/types/api.ts exactly, so swapping to
- * the real API is a matter of replacing the fetch, not the components.
+ * Backend-served shapes (categories, communities, creators) mirror the
+ * backend seed script so fallback content looks like the real thing.
+ * Local-only shapes (posts, lessons, reviews) are marked as such in
+ * types/api.ts.
  */
 
 import type {
   Category,
   Comment,
-  Community,
+  CommunityDetail,
   CommunityListItem,
   Course,
-  CreatorProfile,
+  CreatorProfileResponse,
   Lesson,
   Module,
-  PaymentStatus,
   Post,
   Review,
 } from "@/types/api";
 
 export const MOCK_CATEGORIES: Category[] = [
-  { id: "cat-tech", name: "Tech & Programming", slug: "tech", icon: "code" },
-  { id: "cat-business", name: "Business", slug: "business", icon: "briefcase" },
-  { id: "cat-design", name: "Design", slug: "design", icon: "palette" },
-  { id: "cat-marketing", name: "Marketing", slug: "marketing", icon: "megaphone" },
-  { id: "cat-finance", name: "Finance", slug: "finance", icon: "wallet" },
-  { id: "cat-career", name: "Career Growth", slug: "career", icon: "rocket" },
+  { id: "cat-technology-programming", name: "Technology & Programming", slug: "technology-programming" },
+  { id: "cat-business", name: "Business & Entrepreneurship", slug: "business-entrepreneurship" },
+  { id: "cat-design", name: "Design & Creative", slug: "design-creative" },
+  { id: "cat-finance", name: "Finance & Investing", slug: "finance-investing" },
+  { id: "cat-health", name: "Health & Wellness", slug: "health-wellness" },
+  { id: "cat-language", name: "Language & Communication", slug: "language-communication" },
+  { id: "cat-agriculture", name: "Agriculture & Sustainability", slug: "agriculture-sustainability" },
+  { id: "cat-education", name: "Education & Teaching", slug: "education-teaching" },
 ];
 
-export const MOCK_CREATORS: CreatorProfile[] = [
-  {
-    user_id: "user-ada",
-    display_name: "Adaeze Okafor",
-    avatar_url: null,
-    bio: "Senior software engineer with 8 years building fintech products across Lagos and Nairobi. I teach practical backend engineering — no fluff, just shipping.",
-    expertise: ["Python", "FastAPI", "System Design"],
-    verification_status: "verified",
-    evidence_url: "https://linkedin.com/in/adaeze-okafor",
-    community_count: 2,
-    member_count: 1240,
-  },
-  {
-    user_id: "user-tunde",
-    display_name: "Tunde Bakare",
-    avatar_url: null,
-    bio: "Growth marketer who scaled three Nigerian startups past ₦100M ARR. I teach marketing that works with small budgets.",
-    expertise: ["Growth Marketing", "Content", "SEO"],
-    verification_status: "verified",
-    evidence_url: "https://tundebakare.com",
-    community_count: 1,
-    member_count: 860,
-  },
-  {
-    user_id: "user-funmi",
-    display_name: "Funmi Adeleke",
-    avatar_url: null,
-    bio: "Product designer, ex-Paystack. I help designers build portfolios that get them hired.",
-    expertise: ["UI Design", "Figma", "Portfolios"],
-    verification_status: "verified",
-    evidence_url: "https://funmi.design",
-    community_count: 1,
-    member_count: 512,
-  },
-  {
-    user_id: "user-chidi",
-    display_name: "Chidi Eze",
-    avatar_url: null,
-    bio: "Data analyst turned analytics lead. Learning in public, teaching what I learn.",
-    expertise: ["SQL", "Excel", "Dashboards"],
-    verification_status: "unverified",
-    evidence_url: null,
-    community_count: 1,
-    member_count: 96,
-  },
-];
+/** Slug → Lucide icon key for the explore filter pills. */
+export const CATEGORY_ICONS: Record<string, string> = {
+  "technology-programming": "code",
+  "business-entrepreneurship": "briefcase",
+  "design-creative": "palette",
+  "finance-investing": "wallet",
+  "health-wellness": "heart",
+  "language-communication": "megaphone",
+  "agriculture-sustainability": "sprout",
+  "education-teaching": "graduation-cap",
+};
 
-const creatorById = (id: string): CreatorProfile =>
-  MOCK_CREATORS.find((c) => c.user_id === id) ?? MOCK_CREATORS[0];
+const AMARA = {
+  userId: "creator-amara",
+  displayName: "Amara Okafor",
+  avatarUrl: null,
+  verificationStatus: "verified" as const,
+  isVerified: true,
+};
+
+export const MOCK_CREATOR_PROFILES: Record<string, CreatorProfileResponse> = {
+  "creator-amara": {
+    ...AMARA,
+    bio: "Python developer and teacher. I turn complete beginners into confident builders, one project at a time.",
+    expertise: ["Python", "Web development", "Teaching"],
+    memberCount: 3,
+    communityCount: 3,
+    createdAt: "2026-01-01T00:00:00Z",
+  },
+};
 
 export const MOCK_COMMUNITIES: CommunityListItem[] = [
   {
-    id: "comm-api-eng",
-    slug: "api-engineering-lagos",
-    title: "API Engineering with Adaeze",
-    category_id: "cat-tech",
-    image_url: null,
-    creator: { display_name: "Adaeze Okafor", avatar_url: null, verification_status: "verified" },
-    price_kobo: 500000,
-    currency: "NGN",
-    billing_period: "one_time",
-    member_count: 842,
-    rating: 4.8,
+    id: "comm-python",
+    title: "Python for Absolute Beginners",
+    slug: "python-for-absolute-beginners",
+    excerpt: "A gentle, project-driven introduction to Python. No experience needed.",
+    imageUrl: null,
+    priceAmount: "0.00",
+    priceCurrency: "NGN",
+    isFree: true,
+    memberCount: 3,
+    isPublished: true,
+    categories: [MOCK_CATEGORIES[0], MOCK_CATEGORIES[7]],
+    creator: AMARA,
+    createdAt: "2026-01-01T00:00:00Z",
   },
   {
-    id: "comm-growth",
-    slug: "growth-marketing-ng",
-    title: "Growth Marketing for Nigerian Startups",
-    category_id: "cat-marketing",
-    image_url: null,
-    creator: { display_name: "Tunde Bakare", avatar_url: null, verification_status: "verified" },
-    price_kobo: 350000,
-    currency: "NGN",
-    billing_period: "monthly",
-    member_count: 860,
-    rating: 4.6,
+    id: "comm-launch",
+    title: "Launch Your First Product in 30 Days",
+    slug: "launch-your-first-product-in-30-days",
+    excerpt: "A 30-day guided sprint from idea to launched product, with daily accountability.",
+    imageUrl: null,
+    priceAmount: "5000.00",
+    priceCurrency: "NGN",
+    isFree: false,
+    memberCount: 1,
+    isPublished: true,
+    categories: [MOCK_CATEGORIES[1], MOCK_CATEGORIES[3]],
+    creator: AMARA,
+    createdAt: "2026-01-02T00:00:00Z",
   },
   {
-    id: "comm-design-portfolio",
-    slug: "design-portfolios-that-hire",
-    title: "Design Portfolios That Get You Hired",
-    category_id: "cat-design",
-    image_url: null,
-    creator: { display_name: "Funmi Adeleke", avatar_url: null, verification_status: "verified" },
-    price_kobo: 0,
-    currency: "NGN",
-    billing_period: "one_time",
-    member_count: 512,
-    rating: 4.9,
-  },
-  {
-    id: "comm-sql-basics",
-    slug: "sql-from-scratch",
-    title: "SQL from Scratch",
-    category_id: "cat-tech",
-    image_url: null,
-    creator: { display_name: "Chidi Eze", avatar_url: null, verification_status: "unverified" },
-    price_kobo: 150000,
-    currency: "NGN",
-    billing_period: "one_time",
-    member_count: 96,
-    rating: null,
+    id: "comm-textiles",
+    title: "African Textiles Design Foundations",
+    slug: "african-textiles-design-foundations",
+    excerpt: "Patterns, colour, and craft — the foundations of African textile design.",
+    imageUrl: null,
+    priceAmount: "2500.00",
+    priceCurrency: "NGN",
+    isFree: false,
+    memberCount: 0,
+    isPublished: true,
+    categories: [MOCK_CATEGORIES[2]],
+    creator: AMARA,
+    createdAt: "2026-01-03T00:00:00Z",
   },
 ];
 
-export function getCommunityDetail(slug: string): Community | null {
+export function getCommunityDetail(slug: string): CommunityDetail | null {
   const item = MOCK_COMMUNITIES.find((c) => c.slug === slug);
   if (!item) return null;
-  const creatorId =
-    MOCK_CREATORS.find((c) => c.display_name === item.creator.display_name)?.user_id ??
-    "user-ada";
+  const { excerpt: _excerpt, ...rest } = item;
   return {
-    ...item,
+    ...rest,
     description:
       "A hands-on learning community with structured lessons, weekly discussions, and direct access to the creator. Learn at your own pace, ask questions anytime, and build real projects with feedback.",
-    tags: ["beginner-friendly", "projects", "community-support"],
-    creator_id: creatorId,
-    creator: creatorById(creatorId),
-    status: "published",
-    review_count: 127,
-    created_at: "2026-06-01T00:00:00Z",
-    updated_at: "2026-09-20T00:00:00Z",
-    can_enroll: true,
-    enrollment: null,
+    courses:
+      slug === "python-for-absolute-beginners"
+        ? [
+            { id: "course-1", title: "Getting Started", position: 1, moduleCount: 2, lessonCount: 4, isPublished: true },
+            { id: "course-2", title: "Control Flow", position: 2, moduleCount: 2, lessonCount: 4, isPublished: true },
+          ]
+        : [],
+    updatedAt: "2026-09-20T00:00:00Z",
   };
 }
+
+// ── Local-only mocks (no backend endpoint yet) ─────────────────────────────
 
 export const MOCK_COURSES: Course[] = [
   {
     id: "course-1",
-    community_id: "comm-api-eng",
-    title: "REST APIs from Zero",
-    description: "Design, build, and document production APIs.",
-    position: 0,
+    community_id: "comm-python",
+    title: "Getting Started",
+    description: "Install Python, write your first programs.",
+    position: 1,
     is_published: true,
     module_count: 2,
-    lesson_count: 5,
+    lesson_count: 4,
   },
   {
     id: "course-2",
-    community_id: "comm-api-eng",
-    title: "Auth & Payments",
-    description: "JWT, RBAC, and Paystack integration.",
-    position: 1,
+    community_id: "comm-python",
+    title: "Control Flow",
+    description: "Conditionals, loops, and thinking like a programmer.",
+    position: 2,
     is_published: true,
-    module_count: 1,
-    lesson_count: 3,
+    module_count: 2,
+    lesson_count: 4,
   },
 ];
 
@@ -184,64 +161,26 @@ export const MOCK_MODULES: Record<string, Module[]> = {
     {
       id: "mod-1",
       course_id: "course-1",
-      title: "Foundations",
-      position: 0,
+      title: "Setup & First Steps",
+      position: 1,
       lessons: [
         {
           id: "les-1",
           module_id: "mod-1",
-          title: "What makes a good API?",
-          content: "Good APIs are predictable, documented, and boring in the best way...",
+          title: "Installing Python",
+          content: "Download Python, verify the install, and run your first line of code...",
           video_url: null,
-          position: 0,
+          position: 1,
           is_published: true,
           is_completed: true,
         },
         {
           id: "les-2",
           module_id: "mod-1",
-          title: "HTTP methods & status codes",
-          content: "GET retrieves, POST creates...",
-          video_url: null,
-          position: 1,
-          is_published: true,
-          is_completed: true,
-        },
-        {
-          id: "les-3",
-          module_id: "mod-1",
-          title: "Your first FastAPI app",
-          content: "Install FastAPI, write your first endpoint...",
+          title: "Variables & Types",
+          content: "Numbers, strings, and naming things well...",
           video_url: null,
           position: 2,
-          is_published: true,
-          is_completed: false,
-        },
-      ],
-    },
-    {
-      id: "mod-2",
-      course_id: "course-1",
-      title: "Going deeper",
-      position: 1,
-      lessons: [
-        {
-          id: "les-4",
-          module_id: "mod-2",
-          title: "Validation with Pydantic",
-          content: "Never trust the client...",
-          video_url: null,
-          position: 0,
-          is_published: true,
-          is_completed: false,
-        },
-        {
-          id: "les-5",
-          module_id: "mod-2",
-          title: "Pagination & filtering",
-          content: "Every list endpoint paginates...",
-          video_url: null,
-          position: 1,
           is_published: true,
           is_completed: false,
         },
@@ -266,9 +205,9 @@ export function getLesson(lessonId: string): (Lesson & { courseTitle: string }) 
 export const MOCK_POSTS: Post[] = [
   {
     id: "post-1",
-    community_id: "comm-api-eng",
-    author_id: "user-ada",
-    author: { display_name: "Adaeze Okafor", avatar_url: null },
+    community_id: "comm-python",
+    author_id: "creator-amara",
+    author: { display_name: "Amara Okafor", avatar_url: null },
     content:
       "Welcome to the community! Introduce yourself below: what are you building, and what do you want to learn first?",
     is_pinned: true,
@@ -279,29 +218,16 @@ export const MOCK_POSTS: Post[] = [
   },
   {
     id: "post-2",
-    community_id: "comm-api-eng",
-    author_id: "user-learner-1",
-    author: { display_name: "Blessing N.", avatar_url: null },
+    community_id: "comm-python",
+    author_id: "user-kwame",
+    author: { display_name: "Kwame Mensah", avatar_url: null },
     content:
-      "Just finished the Pydantic lesson — the `field_validator` example finally made validation click for me. For anyone stuck: the key insight is validators run before the model is constructed.",
+      "Just finished the setup lesson — Python 3.12 installed and my first print() works. Small win, but it feels big.",
     is_pinned: false,
     is_announcement: false,
     like_count: 42,
     comment_count: 7,
     created_at: "2026-09-28T14:30:00Z",
-  },
-  {
-    id: "post-3",
-    community_id: "comm-api-eng",
-    author_id: "user-learner-2",
-    author: { display_name: "Ibrahim S.", avatar_url: null },
-    content:
-      "Question: for the Paystack webhook, do we verify the signature before or after parsing the body? Worried about timing attacks.",
-    is_pinned: false,
-    is_announcement: false,
-    like_count: 18,
-    comment_count: 12,
-    created_at: "2026-09-29T09:15:00Z",
   },
 ];
 
@@ -310,17 +236,17 @@ export const MOCK_COMMENTS: Record<string, Comment[]> = {
     {
       id: "c-1",
       post_id: "post-1",
-      author_id: "user-learner-1",
-      author: { display_name: "Blessing N.", avatar_url: null },
-      content: "Hi everyone! Backend dev in Abuja, here to level up my API design skills.",
+      author_id: "user-kwame",
+      author: { display_name: "Kwame Mensah", avatar_url: null },
+      content: "Hi everyone! Kwame from Accra, here to finally learn Python properly.",
       created_at: "2026-09-01T11:00:00Z",
     },
     {
       id: "c-2",
       post_id: "post-1",
-      author_id: "user-learner-2",
-      author: { display_name: "Ibrahim S.", avatar_url: null },
-      content: "Ibrahim here from Kano — building a school fees payment product.",
+      author_id: "user-ada",
+      author: { display_name: "Ada Nwosu", avatar_url: null },
+      content: "Ada here from Enugu — excited to build my first project.",
       created_at: "2026-09-01T12:30:00Z",
     },
   ],
@@ -329,48 +255,29 @@ export const MOCK_COMMENTS: Record<string, Comment[]> = {
 export const MOCK_REVIEWS: Review[] = [
   {
     id: "rev-1",
-    community_id: "comm-api-eng",
-    user_id: "user-learner-1",
-    author: { display_name: "Blessing N.", avatar_url: null },
+    community_id: "comm-python",
+    user_id: "user-kwame",
+    author: { display_name: "Kwame Mensah", avatar_url: null },
     rating: 5,
-    content: "Worth every kobo. The payments module alone saved me weeks on my project.",
+    content: "Went from zero to writing my own scripts in three weeks. Amara actually answers questions.",
     created_at: "2026-09-15T00:00:00Z",
   },
   {
     id: "rev-2",
-    community_id: "comm-api-eng",
-    user_id: "user-learner-2",
-    author: { display_name: "Ibrahim S.", avatar_url: null },
+    community_id: "comm-python",
+    user_id: "user-ada",
+    author: { display_name: "Ada Nwosu", avatar_url: null },
     rating: 5,
-    content: "Adaeze actually answers questions. That alone is worth the price.",
+    content: "The projects make all the difference — you're building from day one.",
     created_at: "2026-09-18T00:00:00Z",
   },
   {
     id: "rev-3",
-    community_id: "comm-api-eng",
-    user_id: "user-learner-3",
-    author: { display_name: "Chiamaka O.", avatar_url: null },
+    community_id: "comm-python",
+    user_id: "user-zainab",
+    author: { display_name: "Zainab Ali", avatar_url: null },
     rating: 4,
-    content: "Great content, wish there were more advanced system design lessons.",
+    content: "Great pace for beginners. Would love more weekend practice sessions.",
     created_at: "2026-09-22T00:00:00Z",
   },
 ];
-
-/** Simulates GET /payments/{reference}/status — pending 3x, then success. */
-const pollCounts = new Map<string, number>();
-
-export function mockPaymentStatus(reference: string): {
-  status: PaymentStatus;
-  enrollment_id: string | null;
-} {
-  const n = (pollCounts.get(reference) ?? 0) + 1;
-  pollCounts.set(reference, n);
-  if (n >= 4) {
-    return { status: "success", enrollment_id: "enr-mock-1" };
-  }
-  return { status: "pending", enrollment_id: null };
-}
-
-export function resetMockPolls() {
-  pollCounts.clear();
-}

@@ -21,5 +21,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# TypeScript build info (regenerates every build)
+apps/web/tsconfig.tsbuildinfo
+*.tsbuildinfo
+
 # Screenshots (local verification only)
 .openchamber/

@@ -1,26 +1,25 @@
-import { formatMoney } from "@/lib/money";
+import { formatPriceAmount } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import type { BillingPeriod } from "@/types/api";
 
 interface MoneyAmountProps {
-  kobo: number;
+  priceAmount: string | null | undefined;
   currency?: string;
-  billingPeriod?: BillingPeriod;
+  isFree?: boolean;
   className?: string;
 }
 
 /**
  * Renders a price the way every price in the product should read:
- * "Free", "₦5,000" (one-time), or "₦5,000/mo" (subscription).
+ * "Free" or "₦5,000". Amounts arrive as decimal major-unit strings.
  */
-export function MoneyAmount({ kobo, currency = "NGN", billingPeriod, className }: MoneyAmountProps) {
-  if (kobo === 0) {
+export function MoneyAmount({ priceAmount, currency = "NGN", isFree = false, className }: MoneyAmountProps) {
+  const free = isFree || priceAmount === "0.00" || !priceAmount;
+  if (free) {
     return <span className={cn("font-semibold text-emerald-600", className)}>Free</span>;
   }
   return (
     <span className={cn("font-semibold text-slate-900", className)}>
-      {formatMoney(kobo, currency)}
-      {billingPeriod === "monthly" && <span className="font-normal text-slate-500">/mo</span>}
+      {formatPriceAmount(priceAmount, currency, false)}
     </span>
   );
 }

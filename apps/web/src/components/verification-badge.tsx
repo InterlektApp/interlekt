@@ -3,12 +3,13 @@ import { cn } from "@/lib/utils";
 import type { VerificationStatus } from "@/types/api";
 
 interface VerificationBadgeProps {
-  status: VerificationStatus;
+  status: VerificationStatus | null | undefined;
   size?: "sm" | "md";
   className?: string;
 }
 
 export function VerificationBadge({ status, size = "sm", className }: VerificationBadgeProps) {
+  if (!status) return null;
   if (status === "verified") {
     return (
       <span
