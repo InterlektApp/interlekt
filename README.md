@@ -23,17 +23,30 @@ The hackathon demo tells exactly this story: search as a learner → evaluate a 
 ## What's in this repo
 
 ```
-interlekt/
+interlekt/                       # Frontend repo (this one)
 ├── apps/
-│   └── web/                  # Next.js frontend (this is where most of us live)
+│   └── web/                  # Next.js frontend
 ├── docs/
 │   ├── PRD.md                # The product requirements document (source of truth)
-│   ├── architecture.md       # Technical design: API contract, data model, decisions
+│   ├── architecture.md       # Original technical design (see note below)
 │   └── skool-research.md     # What we learned studying Skool's feature set
 ├── .opencode/
 │   └── skills/               # ui-ux-pro-max bundle (design intelligence, local data)
 └── Interlekt_Project_Requirements_Document.docx   # Original PRD, for reference
 ```
+
+> **Two repos, one product.** The backend lives in `InterlektApp/Interlekt-backend`
+> (Python + FastAPI + PostgreSQL) and it is authoritative for the API contract.
+> This repo is frontend-only — there is no `apps/api` here, and there shouldn't be.
+>
+> **Spec note:** `docs/architecture.md` was written before the backend team
+> finalized their contract, and the two diverge in places that matter: the real
+> API speaks **camelCase** (not snake_case), auth is **Bearer tokens in the
+> response body** (not httpOnly cookies), money arrives as **decimal strings**
+> like `"5000.00"` (not integer kobo), pagination is **`page`/`pageSize`**, and
+> roles are an **array**. The frontend adapts to the backend, not the other way
+> around — `src/types/api.ts` mirrors the backend's schemas field for field.
+> When in doubt, read their code, not our old doc.
 
 The backend (`apps/api`, FastAPI + PostgreSQL) is being built against the contract in `docs/architecture.md` §3. The frontend doesn't wait for it — read on.
 
