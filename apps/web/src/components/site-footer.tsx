@@ -29,7 +29,7 @@ const COLUMNS: Array<{ heading: string; links: Array<{ label: string; href: stri
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-white">
+    <footer className="border-t border-sky-100 bg-[#f8fcfe]">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <Logo />
@@ -45,7 +45,7 @@ export function SiteFooter() {
                 <li key={l.label}>
                   <Link
                     href={l.href}
-                    className="text-sm text-slate-600 transition-colors hover:text-blue-600"
+                    className="text-sm text-slate-600 transition-colors hover:text-sky-800"
                   >
                     {l.label}
                   </Link>
@@ -55,7 +55,7 @@ export function SiteFooter() {
           </nav>
         ))}
       </div>
-      <div className="border-t border-slate-100">
+      <div className="border-t border-sky-100/80">
         <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 Interlekt. Made for African learners and creators.</p>
           <p className="font-mono">NGN · Paystack secured</p>

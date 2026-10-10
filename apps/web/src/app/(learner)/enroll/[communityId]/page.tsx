@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { use } from "react";
-import { AlertCircle, CheckCircle2, Loader2, LogIn, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, LogIn, ShieldCheck, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MoneyAmount } from "@/components/money-amount";
@@ -25,10 +25,10 @@ export default function EnrollPage({ params }: EnrollPageProps) {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-lg animate-pulse px-4 py-10">
-        <div className="h-8 w-2/3 rounded bg-slate-200" />
-        <div className="mt-6 h-64 rounded-xl bg-slate-200" />
-      </div>
+      <main className="mx-auto max-w-2xl animate-pulse px-4 py-8 sm:py-10" aria-label="Loading enrollment">
+        <div className="h-8 w-2/3 rounded-lg bg-sky-100" />
+        <div className="mt-6 h-80 rounded-3xl border border-sky-100 bg-sky-50" />
+      </main>
     );
   }
 
@@ -49,103 +49,60 @@ function EnrollFlow({ community, signedIn }: { community: CommunityDetail; signe
   };
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-10">
-      <p className="text-sm text-slate-500">
-        <Link href={`/communities/${community.slug}`} className="hover:text-blue-600">
-          {community.title}
-        </Link>{" "}
-        / Enroll
-      </p>
-      <h1 className="mt-1 font-display text-2xl tracking-tight text-slate-900 md:text-3xl">
-        {community.isFree ? "Join this community" : "Complete your enrollment"}
-      </h1>
+    <main className="mx-auto max-w-2xl px-4 py-7 sm:py-10">
+      <Link href={`/communities/${community.slug}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg text-sm font-medium text-sky-800 hover:text-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700">
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />{community.title}
+      </Link>
+      <header className="mt-5 rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-100 via-cyan-50 to-white p-6 sm:p-8">
+        <p className="label-eyebrow text-sky-800">Community enrollment</p>
+        <h1 className="mt-3 font-display text-3xl tracking-tight text-slate-950 sm:text-4xl">{community.isFree ? "Join this community" : "Complete your enrollment"}</h1>
+        <p className="mt-2 text-sm text-slate-600">{community.title}</p>
+      </header>
 
-      <div className="mt-6 rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex items-baseline justify-between">
-          <span className="text-sm text-slate-500">Total due</span>
-          <MoneyAmount
-            priceAmount={community.priceAmount}
-            currency={community.priceCurrency}
-            isFree={community.isFree}
-            className="text-2xl"
-          />
+      <section className="mt-5 overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between gap-4 border-b border-sky-100 bg-sky-50/70 px-5 py-4 sm:px-6">
+          <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-700"><UsersRound className="h-4 w-4 text-cyan-700" aria-hidden="true" />Enrollment total</span>
+          <MoneyAmount priceAmount={community.priceAmount} currency={community.priceCurrency} isFree={community.isFree} className="text-2xl font-semibold text-slate-950" />
         </div>
 
-        <div className="mt-6">
+        <div className="p-5 sm:p-6">
           {succeeded ? (
-            <div className="flex flex-col items-center py-6 text-center">
-              <CheckCircle2 className="h-12 w-12 text-emerald-500" />
-              <p className="mt-3 text-lg font-semibold text-slate-900">
-                You&apos;re in! Welcome aboard.
-              </p>
-              <Button className="mt-4" asChild>
-                <Link href={`/communities/${community.slug}/classroom`}>
-                  Go to classroom now
-                </Link>
-              </Button>
+            <div className="flex flex-col items-center rounded-2xl bg-emerald-50/70 px-5 py-8 text-center">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-200 bg-white text-emerald-700"><CheckCircle2 className="h-8 w-8" aria-hidden="true" /></span>
+              <p className="mt-4 text-lg font-semibold text-slate-950">You&apos;re in! Welcome aboard.</p>
+              <Button className="mt-5" asChild><Link href={`/communities/${community.slug}/classroom`}>Go to classroom now</Link></Button>
             </div>
           ) : paidBlocked ? (
-            <div className="flex flex-col items-center py-6 text-center">
-              <AlertCircle className="h-12 w-12 text-amber-500" />
-              <p className="mt-3 font-semibold text-slate-900">Online payment isn&apos;t live yet</p>
-              <p className="mt-1 max-w-xs text-sm text-slate-500">
-                {enrollErrorMessage(error)}
-              </p>
-              <Button variant="outline" className="mt-4" asChild>
-                <Link href="/communities">Browse free communities</Link>
-              </Button>
+            <div className="flex flex-col items-center rounded-2xl bg-amber-50 px-5 py-8 text-center">
+              <AlertCircle className="h-10 w-10 text-amber-700" aria-hidden="true" />
+              <p className="mt-3 font-semibold text-slate-950">Online payment isn&apos;t live yet</p>
+              <p className="mt-1 max-w-sm text-sm leading-6 text-slate-600">{enrollErrorMessage(error)}</p>
+              <Button variant="outline" className="mt-5 bg-white" asChild><Link href="/communities">Browse free communities</Link></Button>
             </div>
           ) : !signedIn ? (
-            <div className="flex flex-col items-center py-6 text-center">
-              <LogIn className="h-10 w-10 text-slate-300" />
-              <p className="mt-3 font-medium text-slate-900">Sign in to enroll</p>
-              <p className="mt-1 text-sm text-slate-500">
-                {community.isFree
-                  ? "Joining is free — you just need an account."
-                  : "You'll be able to complete enrollment right after signing in."}
+            <div className="flex flex-col items-center rounded-2xl bg-sky-50/70 px-5 py-8 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-200 bg-white text-sky-800"><LogIn className="h-6 w-6" aria-hidden="true" /></span>
+              <p className="mt-3 font-semibold text-slate-950">Sign in to enroll</p>
+              <p className="mt-1 max-w-sm text-sm leading-6 text-slate-600">
+                {community.isFree ? "Joining is free — you just need an account." : "You'll be able to complete enrollment right after signing in."}
               </p>
-              <Button className="mt-4 w-full" size="lg" asChild>
-                <Link href={`/auth/login?next=/enroll/${community.slug}`}>Sign in to continue</Link>
-              </Button>
+              <Button className="mt-5 w-full sm:w-auto" size="lg" asChild><Link href={`/auth/login?next=/enroll/${community.slug}`}>Sign in to continue</Link></Button>
             </div>
           ) : (
             <>
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={start}
-                disabled={enroll.isPending}
-              >
-                {enroll.isPending ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Enrolling…
-                  </span>
-                ) : community.isFree ? (
-                  "Join for free"
-                ) : (
-                  "Enroll now"
-                )}
+              <Button size="lg" className="w-full" onClick={start} disabled={enroll.isPending}>
+                {enroll.isPending ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />Enrolling…</span> : community.isFree ? "Join for free" : "Enroll now"}
               </Button>
-              {error && !paidBlocked && (
-                <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-700">
-                  {enrollErrorMessage(error)}
-                </p>
-              )}
-              {!community.isFree && (
-                <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  Secured by Paystack · Card, transfer & USSD accepted
-                </p>
-              )}
+              {error && !paidBlocked && <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-center text-sm text-red-800">{enrollErrorMessage(error)}</p>}
+              {!community.isFree && <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-500"><ShieldCheck className="h-3.5 w-3.5 text-emerald-700" aria-hidden="true" />Secured by Paystack · Card, transfer & USSD accepted</p>}
             </>
           )}
         </div>
-      </div>
+      </section>
 
-      <p className="mt-4 text-center text-xs text-slate-400">
+      <p className="mt-4 text-center text-xs leading-5 text-slate-500">
         By enrolling you agree to the community guidelines and our terms of use.
       </p>
-    </div>
+    </main>
   );
 }

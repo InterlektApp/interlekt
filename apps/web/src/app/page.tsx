@@ -5,7 +5,6 @@ import {
   BookOpenCheck,
   Compass,
   MessagesSquare,
-  PlayCircle,
   ShieldCheck,
   Sparkles,
   Wallet,
@@ -21,257 +20,166 @@ import { MOCK_COMMUNITIES, MOCK_REVIEWS } from "@/lib/mocks";
 const STEPS = [
   {
     icon: Compass,
-    title: "Discover",
-    text: "Browse communities by topic and find a creator worth learning from. Verified profiles, real reviews, transparent pricing.",
+    title: "Find your people",
+    text: "Explore welcoming communities led by people who have done the work. Real reviews and clear pricing help you choose with confidence.",
   },
   {
     icon: Wallet,
-    title: "Enroll",
-    text: "Join free communities instantly, or pay securely with Paystack — card, transfer, or USSD. One-time or monthly, the creator decides.",
+    title: "Join with ease",
+    text: "Learn for free or pay securely in naira. Choose a one-time payment or a monthly membership—each creator sets the terms.",
   },
   {
     icon: BookOpenCheck,
-    title: "Learn together",
-    text: "Structured lessons plus a living discussion feed. Ask questions, share wins, and learn with people on the same path.",
+    title: "Grow together",
+    text: "Follow practical lessons, ask questions, share your progress, and learn alongside people working toward the same goals.",
   },
 ];
 
-const PROOF = [
-  { value: "2,700+", label: "learners" },
-  { value: "5", label: "verified creators" },
-  { value: "₦", label: "priced in naira, paid local" },
+const TRUST_POINTS = [
+  { icon: ShieldCheck, label: "Verified creators" },
+  { icon: MessagesSquare, label: "Reviews from real learners" },
+  { icon: Sparkles, label: "Secure local payments" },
 ];
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#f7fafc]">
+    <div className="min-h-screen overflow-hidden bg-white text-slate-950">
       <SiteHeader />
-
       <main>
-        {/* ── Hero: asymmetric 7/5, left-anchored ─────────────────── */}
-        <section className="relative overflow-hidden">
-          {/* Faded icon field behind the right half (Figma hero) */}
-          <div className="absolute inset-y-0 right-0 hidden w-1/2 md:block [mask-image:linear-gradient(to_right,transparent,black_35%)]">
+        <section className="relative isolate flex min-h-[760px] items-center justify-center overflow-hidden px-5 pb-24 pt-20 md:min-h-[820px] md:pb-28 md:pt-16">
+          <div className="pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-[62%] opacity-75 md:block [mask-image:linear-gradient(to_right,transparent,black_27%,black_100%)]">
             <HeroIconPattern />
           </div>
-          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-16 pt-14 md:grid-cols-12 md:pt-20">
-            <div className="md:col-span-7" style={{ animation: "rise-in 500ms var(--ease-out) both" }}>
-              <p className="label-eyebrow">Learning communities · Nigeria first</p>
-              <h1 className="mt-4 font-display text-5xl leading-[1.04] tracking-tight text-slate-900 md:text-6xl">
-                Learn from people worth learning from.
-              </h1>
-              <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600">
-                Interlekt is where African creators turn what they know into learning
-                communities — structured lessons, honest discussion, and pricing in
-                naira. Find your people. Build real skill.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button size="lg" className="press" asChild>
-                  <Link href="/communities">
-                    Explore communities
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="press" asChild>
-                  <Link href="/auth/register">
-                    <PlayCircle className="h-4 w-4" />
-                    Start teaching
-                  </Link>
-                </Button>
-              </div>
-              <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-4">
-                {PROOF.map((p) => (
-                  <div key={p.label}>
-                    <dt className="sr-only">{p.label}</dt>
-                    <dd className="font-display text-3xl text-slate-900">{p.value}</dd>
-                    <dd className="mt-1 text-sm text-slate-500">{p.label}</dd>
-                  </div>
-                ))}
-              </dl>
+          <div className="pointer-events-none absolute -right-32 top-[42%] -z-10 h-[440px] w-[440px] rounded-full bg-sky-50/70 blur-3xl md:hidden" />
+          <div className="relative mx-auto w-full max-w-[1100px] text-center" style={{ animation: "rise-in 550ms var(--ease-out) both" }}>
+            <p className="mb-7 inline-flex items-center gap-2 rounded-full border border-sky-100 bg-white/85 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.17em] text-sky-800 shadow-sm shadow-sky-900/[0.03] md:mb-8">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+              Learn · Connect · Grow
+            </p>
+            <h1 className="mx-auto max-w-[1060px] text-balance font-sans text-[clamp(2.75rem,6vw,5.35rem)] font-semibold leading-[1.08] tracking-[-0.055em] text-[#07111d]">
+              Get in with communities around what you know.
+            </h1>
+            <p className="mx-auto mt-7 max-w-[790px] text-pretty text-base leading-8 text-slate-600 md:mt-8 md:text-[20px] md:leading-[1.65]">
+              Learn new skills, connect with like-minded people, and create spaces where knowledge can be shared, communities can grow, and opportunities can begin.
+            </p>
+            <div className="mt-9 flex justify-center md:mt-11">
+              <Link
+                href="/communities"
+                className="press inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#b5e5f1] px-9 text-[17px] font-semibold text-[#073451] shadow-[0_10px_28px_-16px_rgba(7,52,81,.48)] transition-colors hover:bg-[#a6dff0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-700"
+              >
+                Explore communities
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
             </div>
-
-            {/* Proof panel: featured community, breaks the column */}
-            <div
-              className="md:col-span-5"
-              style={{ animation: "rise-in 500ms var(--ease-out) 90ms both" }}
-            >
-              <div className="lift rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p className="label-eyebrow">Featured this week</p>
-                <div className="mt-3 flex h-36 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 font-display text-5xl text-white/90">
-                  A
-                </div>
-                <h2 className="mt-4 text-lg font-semibold text-slate-900">
-                  API Engineering with Adaeze
-                </h2>
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
-                  Adaeze Okafor
-                  <BadgeCheck className="h-4 w-4 text-blue-500" />
-                  <span aria-label="verified creator">· Verified</span>
-                </p>
-                <div className="mt-2 flex items-center justify-between">
-                  <StarRating rating={4.8} reviewCount={127} />
-                  <span className="text-sm text-slate-500">842 members</span>
-                </div>
-                <Button className="press mt-4 w-full" asChild>
-                  <Link href="/communities/api-engineering-lagos">View community</Link>
-                </Button>
-              </div>
-            </div>
+            <p className="mt-5 text-sm text-slate-500">Find a community. Learn something real.</p>
           </div>
         </section>
 
-        {/* ── Trust strip ─────────────────────────────────────────── */}
-        <section className="border-y border-slate-200/70 bg-white">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-10 gap-y-3 px-4 py-5">
-            <p className="label-eyebrow">Why learners trust Interlekt</p>
-            <ul className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm font-medium text-slate-600">
-              <li className="inline-flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-blue-600" />
-                Verified creators
-              </li>
-              <li className="inline-flex items-center gap-2">
-                <MessagesSquare className="h-4 w-4 text-blue-600" />
-                Reviews from real enrollments
-              </li>
-              <li className="inline-flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-blue-600" />
-                Paystack-secured payments
-              </li>
+        <section className="border-y border-sky-100/80 bg-[#f7fcfe]" aria-label="What makes Interlekt different">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-4 px-5 py-6 md:py-7">
+            <p className="w-full text-center font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 md:w-auto">A better way to learn, together</p>
+            <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-medium text-slate-700">
+              {TRUST_POINTS.map(({ icon: Icon, label }) => (
+                <li key={label} className="inline-flex items-center gap-2.5">
+                  <Icon className="h-[17px] w-[17px] text-sky-700" aria-hidden="true" />
+                  {label}
+                </li>
+              ))}
             </ul>
           </div>
         </section>
 
-        {/* ── Communities ─────────────────────────────────────────── */}
-        <section className="mx-auto max-w-6xl px-4 py-16 md:py-20">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+        <section id="communities" className="scroll-mt-24 mx-auto max-w-6xl px-5 py-20 md:py-24">
+          <div className="flex flex-wrap items-end justify-between gap-5">
             <div>
-              <p className="label-eyebrow">Start here</p>
-              <h2 className="mt-3 font-display text-3xl tracking-tight text-slate-900 md:text-4xl">
-                Communities open now
-              </h2>
+              <p className="label-eyebrow">Explore what’s possible</p>
+              <h2 className="mt-3 font-display text-3xl tracking-tight text-slate-950 md:text-4xl">Communities to grow with</h2>
+              <p className="mt-3 max-w-xl text-slate-600">Find practical lessons, honest conversation, and people who want to see you thrive.</p>
             </div>
-            <Button variant="outline" className="press" asChild>
-              <Link href="/communities">
-                Browse all
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+            <Button variant="outline" className="press rounded-full border-sky-200 text-sky-900 hover:bg-sky-50" asChild>
+              <Link href="/communities">Browse all <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {MOCK_COMMUNITIES.map((c) => (
-              <CommunityCard key={c.id} community={c} />
-            ))}
+          <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {MOCK_COMMUNITIES.map((community) => <CommunityCard key={community.id} community={community} />)}
           </div>
         </section>
 
-        {/* ── How it works ────────────────────────────────────────── */}
-        <section className="border-y border-slate-200/70 bg-white">
-          <div className="mx-auto max-w-6xl px-4 py-16 md:py-20">
-            <p className="label-eyebrow">How it works</p>
-            <h2 className="mt-3 max-w-xl font-display text-3xl tracking-tight text-slate-900 md:text-4xl">
-              Three steps between you and the skill you want.
-            </h2>
-            <ol className="mt-10 grid gap-8 md:grid-cols-3">
-              {STEPS.map((s, i) => (
-                <li key={s.title} className="relative">
-                  <span
-                    aria-hidden="true"
-                    className="font-display text-6xl text-slate-100"
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <s.icon className="mt-2 h-6 w-6 text-blue-600" />
-                  <h3 className="mt-3 text-lg font-semibold text-slate-900">{s.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{s.text}</p>
+        <section id="how-it-works" className="scroll-mt-24 border-y border-sky-100/80 bg-[#f7fcfe]">
+          <div className="mx-auto max-w-6xl px-5 py-20 md:py-24">
+            <p className="label-eyebrow">Your next step starts here</p>
+            <h2 className="mt-3 max-w-2xl font-display text-3xl tracking-tight text-slate-950 md:text-4xl">From curious to confident—together.</h2>
+            <ol className="mt-10 grid gap-5 md:grid-cols-3">
+              {STEPS.map(({ icon: Icon, title, text }, index) => (
+                <li key={title} className="lift rounded-2xl border border-sky-100 bg-white p-6 md:p-7">
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e4f7fc] text-sky-800"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                    <span className="font-mono text-xs font-medium tracking-wider text-slate-400">0{index + 1}</span>
+                  </div>
+                  <h3 className="mt-6 text-lg font-semibold text-slate-950">{title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{text}</p>
                 </li>
               ))}
             </ol>
           </div>
         </section>
 
-        {/* ── Creator band ────────────────────────────────────────── */}
-        <section className="mx-auto max-w-6xl px-4 py-16 md:py-20">
-          <div className="grid overflow-hidden rounded-2xl bg-slate-900 md:grid-cols-2">
-            <div className="p-8 md:p-12">
-              <p className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-sky-300">
-                For creators
-              </p>
-              <h2 className="mt-3 font-display text-3xl tracking-tight text-white md:text-4xl">
-                Your knowledge is a business waiting to happen.
-              </h2>
-              <p className="mt-4 max-w-md leading-relaxed text-slate-300">
-                Package what you know into a community, charge in naira, and watch
-                revenue land in your dashboard. No website to build, no payment
-                plumbing to wrestle.
-              </p>
-              <Button size="lg" variant="secondary" className="press mt-8" asChild>
-                <Link href="/auth/register">
-                  Become a creator
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+        <section id="creators" className="scroll-mt-24 mx-auto max-w-6xl px-5 py-20 md:py-24">
+          <div className="grid overflow-hidden rounded-[28px] bg-[#082f4a] md:grid-cols-[1.08fr_.92fr]">
+            <div className="p-8 md:p-12 lg:p-14">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a9e4f2]">For the ones who teach</p>
+              <h2 className="mt-4 max-w-xl font-display text-3xl tracking-tight text-white md:text-4xl">Turn what you know into a community that grows.</h2>
+              <p className="mt-4 max-w-lg leading-7 text-sky-100/80">Share your experience, build a home for your learners, and earn from your knowledge—with local pricing and payments built in.</p>
+              <Button size="lg" className="press mt-8 rounded-full bg-[#b5e5f1] px-6 text-[#073451] hover:bg-[#d1f0f7]" asChild>
+                <Link href="/auth/register">Start teaching <ArrowRight className="h-4 w-4" /></Link>
               </Button>
             </div>
-            <div className="flex flex-col justify-center gap-4 bg-slate-800/50 p-8 md:p-12">
+            <div className="flex flex-col justify-center gap-3 bg-white/[0.045] p-7 md:p-10">
               {[
-                ["Set your price", "One-time or monthly — you decide, per community."],
-                ["See every kobo", "Members, transactions, and your share, live."],
-                ["Get discovered", "Verified badge, reviews, and a public profile."],
-              ].map(([t, d]) => (
-                <div key={t} className="rounded-xl bg-slate-800 p-4 ring-1 ring-white/10">
-                  <p className="font-semibold text-white">{t}</p>
-                  <p className="mt-1 text-sm text-slate-300">{d}</p>
+                ["Set your price", "One-time or monthly—you decide."],
+                ["See your progress", "Members and revenue in one clear view."],
+                ["Get discovered", "Build trust with verified profiles and learner reviews."],
+              ].map(([title, description]) => (
+                <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
+                  <p className="font-semibold text-white">{title}</p>
+                  <p className="mt-1 text-sm leading-6 text-sky-100/70">{description}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── Testimonials ────────────────────────────────────────── */}
-        <section className="mx-auto max-w-6xl px-4 pb-16 md:pb-20">
-          <p className="label-eyebrow">Wall of love</p>
-          <h2 className="mt-3 font-display text-3xl tracking-tight text-slate-900 md:text-4xl">
-            Learners say it better.
-          </h2>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {MOCK_REVIEWS.map((r) => (
-              <figure key={r.id} className="lift rounded-2xl border border-slate-200 bg-white p-6">
-                <StarRating rating={r.rating} />
-                <blockquote className="mt-3 text-sm leading-relaxed text-slate-700">
-                  “{r.content}”
-                </blockquote>
-                <figcaption className="mt-4 flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
-                    {r.author.display_name.charAt(0)}
-                  </span>
-                  <span className="text-sm font-medium text-slate-900">
-                    {r.author.display_name}
-                  </span>
-                </figcaption>
-              </figure>
-            ))}
+        <section id="reviews" className="scroll-mt-24 border-y border-sky-100/80 bg-[#f7fcfe]">
+          <div className="mx-auto max-w-6xl px-5 py-20 md:py-24">
+            <p className="label-eyebrow">Learner stories</p>
+            <h2 className="mt-3 font-display text-3xl tracking-tight text-slate-950 md:text-4xl">Good things grow in good company.</h2>
+            <div className="mt-9 grid gap-5 md:grid-cols-3">
+              {MOCK_REVIEWS.map((review) => (
+                <figure key={review.id} className="lift rounded-2xl border border-sky-100 bg-white p-6">
+                  <StarRating rating={review.rating} />
+                  <blockquote className="mt-4 text-sm leading-7 text-slate-700">“{review.content}”</blockquote>
+                  <figcaption className="mt-5 flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#dff4fa] text-sm font-semibold text-sky-900">{review.author.display_name.charAt(0)}</span>
+                    <span className="text-sm font-medium text-slate-900">{review.author.display_name}</span>
+                    <BadgeCheck className="h-4 w-4 text-sky-700" aria-label="Verified learner" />
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* ── Final CTA ───────────────────────────────────────────── */}
-        <section className="mx-auto max-w-6xl px-4 pb-20">
-          <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-600 to-blue-800 px-8 py-14 text-center md:py-16">
-            <h2 className="mx-auto max-w-xl font-display text-3xl tracking-tight text-white md:text-4xl">
-              Stop scrolling past the skill you want.
-            </h2>
-            <p className="mx-auto mt-3 max-w-md text-blue-100">
-              Join a community today — free or paid, always taught by someone
-              who&apos;s done the work.
-            </p>
-            <Button size="lg" variant="secondary" className="press mt-8" asChild>
-              <Link href="/communities">
-                Find your community
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+        <section className="mx-auto max-w-6xl px-5 py-16 md:py-20">
+          <div className="rounded-[28px] border border-sky-100 bg-[#eaf8fc] px-6 py-12 text-center md:px-12 md:py-16">
+            <p className="label-eyebrow">Your people are out there</p>
+            <h2 className="mx-auto mt-3 max-w-2xl font-display text-3xl tracking-tight text-slate-950 md:text-4xl">Make room for what you want to learn next.</h2>
+            <p className="mx-auto mt-4 max-w-xl leading-7 text-slate-600">Join a community led by someone who’s been where you want to go.</p>
+            <Link href="/communities" className="press mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#b5e5f1] px-7 font-semibold text-[#073451] hover:bg-[#a6dff0]">
+              Find your community <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
   );

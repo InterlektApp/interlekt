@@ -25,7 +25,7 @@ const registerSchema = z
 type RegisterForm = z.infer<typeof registerSchema>;
 
 const inputClass =
-  "h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-[15px] text-slate-900 placeholder:text-slate-900 outline-none transition-colors focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+  "h-[52px] w-full rounded-xl border border-[#c9d7e1] bg-white px-4 text-[15px] text-[#102f46] placeholder:text-slate-500 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -78,17 +78,17 @@ export default function RegisterPage() {
 
   return (
     <AuthShell side="right">
-      <h1 className="text-[26px] font-medium tracking-tight text-slate-900">
+      <h1 className="text-center text-[26px] font-semibold tracking-[-0.035em] text-[#092d49] sm:text-[28px]">
         Create your own Account
       </h1>
-      <p className="mt-3 text-[15px] text-slate-900">
+      <p className="mt-3 text-center text-[15px] leading-6 text-slate-700">
         Already have an account?{" "}
-        <Link href="/auth/login" className="text-sky-700 hover:underline">
+        <Link href="/auth/login" className="font-medium text-sky-800 underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
           Sign in
         </Link>
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
         {/* Role: learner or creator */}
         <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="I want to">
           <button
@@ -97,10 +97,10 @@ export default function RegisterPage() {
             aria-checked={role === "learner"}
             onClick={() => setValue("role", "learner")}
             className={cn(
-              "flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors",
+              "flex min-h-[66px] items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-100",
               role === "learner"
-                ? "border-sky-500 bg-sky-50 ring-1 ring-sky-500"
-                : "border-slate-200 hover:border-slate-300",
+                ? "border-sky-500 bg-[#eef9fd] ring-1 ring-sky-500"
+                : "border-[#d6e1e8] bg-white hover:border-sky-300",
             )}
           >
             <GraduationCap className="h-5 w-5 text-sky-700" />
@@ -115,10 +115,10 @@ export default function RegisterPage() {
             aria-checked={role === "creator"}
             onClick={() => setValue("role", "creator")}
             className={cn(
-              "flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors",
+              "flex min-h-[66px] items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-100",
               role === "creator"
-                ? "border-sky-500 bg-sky-50 ring-1 ring-sky-500"
-                : "border-slate-200 hover:border-slate-300",
+                ? "border-sky-500 bg-[#eef9fd] ring-1 ring-sky-500"
+                : "border-[#d6e1e8] bg-white hover:border-sky-300",
             )}
           >
             <Presentation className="h-5 w-5 text-sky-700" />
@@ -165,25 +165,25 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <p className="text-center text-[13px] text-slate-500">
+        <p className="px-1 text-center text-[13px] leading-5 text-slate-600">
           By signing up, you accept our{" "}
-          <Link href="/terms" className="underline hover:text-slate-700">
+            <Link href="/terms" className="text-sky-800 underline underline-offset-2 hover:text-sky-950 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
             terms
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="underline hover:text-slate-700">
+            <Link href="/privacy" className="text-sky-800 underline underline-offset-2 hover:text-sky-950 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
             privacy policy
           </Link>
         </p>
 
         {serverError && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>
+          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">{serverError}</p>
         )}
 
         <button
           type="submit"
           disabled={registerMutation.isPending}
-          className="press h-12 w-full rounded-full bg-[#0a2f4f] text-[15px] font-medium text-white transition-colors hover:bg-[#134a75] disabled:opacity-60"
+          className="press h-[52px] w-full rounded-full bg-[#073653] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0b496f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {registerMutation.isPending ? (
             <span className="inline-flex items-center gap-2">

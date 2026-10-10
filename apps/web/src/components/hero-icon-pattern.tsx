@@ -88,7 +88,7 @@ export function HeroIconPattern({ className }: { className?: string }) {
         <span
           key={i}
           className="absolute text-slate-400"
-          style={{ top, left, opacity, transform: `rotate(${rotate}deg)` }}
+          style={{ top, left, opacity: opacity * 0.4, transform: `rotate(${rotate}deg)` }}
         >
           <Icon style={{ width: size, height: size }} strokeWidth={1.5} />
         </span>

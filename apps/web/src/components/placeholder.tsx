@@ -13,10 +13,10 @@ interface PlaceholderProps {
 }
 
 const variantStyles: Record<string, string> = {
-  default: "from-blue-50 to-sky-50 border-blue-200",
-  learner: "from-emerald-50 to-teal-50 border-emerald-200",
-  creator: "from-violet-50 to-purple-50 border-violet-200",
-  admin: "from-amber-50 to-orange-50 border-amber-200",
+  default: "from-[#f2fbfe] to-white border-sky-100",
+  learner: "from-[#f2fbfe] to-white border-sky-100",
+  creator: "from-[#f2fbfe] to-white border-sky-100",
+  admin: "from-[#f2fbfe] to-white border-sky-100",
 };
 
 export function Placeholder({
@@ -27,7 +27,7 @@ export function Placeholder({
   variant = "default",
 }: PlaceholderProps) {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f8fcfe] p-4">
       <div
         className={cn(
           "max-w-lg w-full rounded-2xl border bg-gradient-to-br p-8 text-center shadow-sm",

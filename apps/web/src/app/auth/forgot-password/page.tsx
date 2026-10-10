@@ -38,30 +38,30 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <AuthShell side="left">
-      <h1 className="text-[26px] font-medium tracking-tight text-slate-900">
-        Reset your password
+    <AuthShell side="center">
+      <h1 className="text-center text-[26px] font-semibold tracking-[-0.035em] text-[#092d49] sm:text-[28px]">
+        Forgot your password?
       </h1>
       {sent ? (
         <>
-          <p className="mt-3 flex items-start gap-2 text-[15px] leading-relaxed text-slate-700">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+          <p role="status" className="mt-5 flex items-start gap-2 rounded-xl border border-sky-100 bg-sky-50/70 p-4 text-[15px] leading-relaxed text-[#19394f]">
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-sky-700" />
             If that email is registered, a reset link is on its way. Check your
             inbox (and spam folder).
           </p>
           <Link
             href="/auth/login"
-            className="mt-6 block h-12 w-full rounded-full bg-[#0a2f4f] text-center text-[15px] font-medium leading-[3rem] text-white transition-colors hover:bg-[#134a75]"
+            className="press mt-6 block h-[52px] w-full rounded-full bg-[#073653] text-center text-[15px] font-semibold leading-[52px] text-white shadow-sm transition-colors hover:bg-[#0b496f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200"
           >
             Back to login
           </Link>
         </>
       ) : (
         <>
-          <p className="mt-3 text-[15px] text-slate-600">
+          <p className="mt-3 text-center text-[15px] leading-6 text-slate-600">
             Enter your account email and we&apos;ll send you a reset link.
           </p>
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
             <div>
               <input
                 type="email"
@@ -69,19 +69,19 @@ export default function ForgotPasswordPage() {
                 placeholder="Email address*"
                 aria-label="Email address"
                 {...register("email")}
-                className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-[52px] w-full rounded-xl border border-[#c9d7e1] bg-white px-4 text-[15px] text-[#102f46] placeholder:text-slate-500 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
               />
               {errors.email && (
                 <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
               )}
             </div>
             {serverError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>
+              <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">{serverError}</p>
             )}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="press h-12 w-full rounded-full bg-[#0a2f4f] text-[15px] font-medium text-white transition-colors hover:bg-[#134a75] disabled:opacity-60"
+              className="press mx-auto h-[52px] w-full max-w-[476px] rounded-full bg-[#073653] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0b496f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">

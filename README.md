@@ -95,7 +95,7 @@ Useful commands:
 Only three variables are public (everything else is server-side):
 
 ```
-API_ORIGIN=http://localhost:8000          # FastAPI, used by next.config rewrites
+API_ORIGIN=http://localhost:8001          # FastAPI, used by next.config rewrites
 NEXT_PUBLIC_CLOUDINARY_CLOUD=             # unsigned upload preset name
 NEXT_PUBLIC_CLOUDINARY_PRESET=
 NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=          # public key only — the secret never leaves the backend

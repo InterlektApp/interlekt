@@ -13,7 +13,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
   return (
     <Link
       href={`/communities/${community.slug}`}
-      className="lift group overflow-hidden rounded-xl border bg-white shadow-sm"
+      className="lift group overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-[0_10px_28px_-24px_rgba(7,52,81,.42)]"
     >
       <div className="relative aspect-[16/9] bg-slate-100">
         {community.imageUrl ? (
@@ -31,7 +31,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
         )}
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-slate-900 line-clamp-1 group-hover:text-blue-600">
+        <h3 className="font-semibold text-slate-900 line-clamp-1 group-hover:text-sky-800">
           {community.title}
         </h3>
         <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">

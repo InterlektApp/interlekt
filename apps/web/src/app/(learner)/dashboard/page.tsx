@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen, Flame, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/stat-card";
 import { MoneyAmount } from "@/components/money-amount";
 import { useMyEnrollments } from "@/hooks/use-enrollments";
 import type { EnrollmentResponse } from "@/types/api";
@@ -13,18 +12,26 @@ function EnrolledCard({ enrollment }: { enrollment: EnrollmentResponse }) {
   return (
     <Link
       href={`/communities/${c.slug}`}
-      className="lift group overflow-hidden rounded-xl border bg-white shadow-sm"
+      className="group lift overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-sm transition-colors hover:border-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
     >
-      <div className="flex h-28 items-center justify-center bg-gradient-to-br from-blue-100 to-sky-100 font-display text-4xl text-blue-300">
-        {c.title.charAt(0)}
+      <div className="relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br from-sky-100 via-cyan-50 to-white">
+        <span className="absolute -right-5 -top-8 h-32 w-32 rounded-full border-[18px] border-white/40" aria-hidden="true" />
+        <span className="absolute -bottom-14 -left-6 h-32 w-32 rounded-full border-[18px] border-cyan-100/70" aria-hidden="true" />
+        <span className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-sky-200 bg-white/85 font-display text-3xl font-semibold text-sky-800 shadow-sm">
+          {c.title.charAt(0)}
+        </span>
+        <span className="absolute right-4 top-4 rounded-full border border-sky-200 bg-white/90 px-2.5 py-1 text-[11px] font-semibold capitalize tracking-wide text-sky-800">
+          {enrollment.status}
+        </span>
       </div>
-      <div className="p-4">
-        <h3 className="font-semibold text-slate-900 line-clamp-1 group-hover:text-blue-600">
+      <div className="p-5">
+        <h3 className="line-clamp-1 font-semibold text-slate-950 transition-colors group-hover:text-cyan-800">
           {c.title}
         </h3>
-        <div className="mt-1 flex items-center justify-between">
-          <span className="inline-flex items-center gap-1 text-xs capitalize text-emerald-600">
-            {enrollment.status}
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+            <BookOpen className="h-3.5 w-3.5 text-cyan-700" aria-hidden="true" />
+            Learning community
           </span>
           <MoneyAmount priceAmount={c.priceAmount} currency={c.priceCurrency} isFree={c.isFree} />
         </div>
@@ -38,51 +45,64 @@ export default function LearnerDashboard() {
   const active = enrollments.filter((e) => e.status === "active");
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <p className="label-eyebrow">Dashboard</p>
-      <h1 className="mt-2 font-display text-3xl tracking-tight text-slate-900">
-        Good evening
-      </h1>
-      <p className="mt-1 text-sm text-slate-500">Pick up where you left off.</p>
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Communities" value={active.length} />
-        <StatCard label="Lessons completed" value={2} hint="Keep the streak going" />
-        <StatCard label="Learning streak" value="3 days" />
-      </div>
-
-      <div className="mt-8 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Continue learning</h2>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/my-communities">
-            View all
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
-      </div>
-      {isLoading ? (
-        <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="h-56 animate-pulse rounded-xl bg-slate-200/70" />
-          ))}
+    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
+      <section className="relative overflow-hidden rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-100 via-cyan-50 to-white p-6 sm:p-8">
+        <div className="pointer-events-none absolute -right-14 -top-20 h-64 w-64 rounded-full border-[30px] border-white/60" aria-hidden="true" />
+        <div className="relative max-w-2xl">
+          <p className="label-eyebrow text-sky-800">Your learning space</p>
+          <h1 className="mt-3 font-display text-3xl tracking-tight text-slate-950 sm:text-4xl">Good evening</h1>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">Pick up where you left off.</p>
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/80 px-3 py-1.5 text-xs font-medium text-sky-900">
+            <BookOpen className="h-4 w-4 text-cyan-700" aria-hidden="true" />
+            A little progress adds up
+          </div>
         </div>
-      ) : active.length === 0 ? (
-        <div className="mt-4 rounded-xl border bg-white p-8 text-center">
-          <p className="font-medium text-slate-900">You haven&apos;t joined anything yet</p>
-          <p className="mt-1 text-sm text-slate-500">
-            Enrollments show up here once you join a community.
-          </p>
-          <Button className="mt-4" asChild>
-            <Link href="/communities">Explore communities</Link>
+      </section>
+
+      <section aria-label="Learning overview" className="mt-6 grid gap-3 sm:grid-cols-3 sm:gap-4">
+        <div className="flex items-center gap-4 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-cyan-800"><UsersRound className="h-5 w-5" aria-hidden="true" /></span>
+          <div><p className="text-sm text-slate-600">Communities</p><p className="mt-0.5 text-2xl font-semibold tracking-tight text-slate-950">{active.length}</p></div>
+        </div>
+        <div className="flex items-center gap-4 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-cyan-800"><BookOpen className="h-5 w-5" aria-hidden="true" /></span>
+          <div><p className="text-sm text-slate-600">Lessons completed</p><p className="mt-0.5 text-2xl font-semibold tracking-tight text-slate-950">2</p><p className="text-xs text-slate-500">Keep the streak going</p></div>
+        </div>
+        <div className="flex items-center gap-4 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-cyan-800"><Flame className="h-5 w-5" aria-hidden="true" /></span>
+          <div><p className="text-sm text-slate-600">Learning streak</p><p className="mt-0.5 text-2xl font-semibold tracking-tight text-slate-950">3 days</p></div>
+        </div>
+      </section>
+
+      <section className="mt-9 sm:mt-11">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="label-eyebrow">Your next step</p>
+            <h2 className="mt-1 font-display text-2xl tracking-tight text-slate-950">Continue learning</h2>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/my-communities">View all <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
           </Button>
         </div>
-      ) : (
-        <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {active.map((e) => (
-            <EnrolledCard key={e.id} enrollment={e} />
-          ))}
-        </div>
-      )}
-    </div>
+        {isLoading ? (
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading communities">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="h-60 animate-pulse rounded-2xl border border-sky-100 bg-sky-50" />
+            ))}
+          </div>
+        ) : active.length === 0 ? (
+          <div className="mt-5 rounded-2xl border border-dashed border-sky-300 bg-white px-6 py-10 text-center sm:py-12">
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-cyan-800"><BookOpen className="h-6 w-6" aria-hidden="true" /></span>
+            <p className="mt-4 font-semibold text-slate-950">You haven&apos;t joined anything yet</p>
+            <p className="mt-1 text-sm text-slate-600">Enrollments show up here once you join a community.</p>
+            <Button className="mt-5" asChild><Link href="/communities">Explore communities</Link></Button>
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {active.map((e) => <EnrolledCard key={e.id} enrollment={e} />)}
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
