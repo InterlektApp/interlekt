@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
-const apiOrigin = process.env.API_ORIGIN || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+// const apiOrigin = process.env.API_ORIGIN || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const apiOrigin = "https://interlekt-backend.onrender.com/api/v1";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
