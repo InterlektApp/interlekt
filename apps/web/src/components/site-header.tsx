@@ -5,7 +5,7 @@ import { Logo } from "@/components/logo";
 const NAV_ITEMS = [
   { label: "Features", href: "/#how-it-works", dropdown: true },
   { label: "About", href: "/#creators" },
-  { label: "Review", href: "/#reviews" },
+  { label: "Communities", href: "/communities" },
 ];
 
 export function SiteHeader() {

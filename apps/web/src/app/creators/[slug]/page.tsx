@@ -10,7 +10,6 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useCommunities } from "@/hooks/use-communities";
 import { useCreator } from "@/hooks/use-users";
-import { MOCK_COMMUNITIES } from "@/lib/mocks";
 
 interface CreatorPageProps {
   params: Promise<{ slug: string }>;
@@ -42,11 +41,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
 
   if (!creator) notFound();
 
-  const apiCommunities = (list?.items ?? []).filter((c) => c.creator.userId === creator.userId);
-  const communities =
-    apiCommunities.length > 0
-      ? apiCommunities
-      : MOCK_COMMUNITIES.filter((c) => c.creator.userId === creator.userId);
+  const communities = (list?.items ?? []).filter((c) => c.creator.userId === creator.userId);
 
   return (
     <div className="min-h-screen bg-[#f7fbfd] text-[#102f45]">

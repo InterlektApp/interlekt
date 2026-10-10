@@ -1,7 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowRight,
-  BadgeCheck,
   BookOpenCheck,
   Compass,
   MessagesSquare,
@@ -12,10 +13,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { CommunityCard } from "@/components/community-card";
 import { HeroIconPattern } from "@/components/hero-icon-pattern";
-import { StarRating } from "@/components/star-rating";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { MOCK_COMMUNITIES, MOCK_REVIEWS } from "@/lib/mocks";
+import { useCommunities } from "@/hooks/use-communities";
 
 const STEPS = [
   {
@@ -42,6 +42,9 @@ const TRUST_POINTS = [
 ];
 
 export default function LandingPage() {
+  const { data: communityData, isLoading: communitiesLoading, isError: communitiesError } = useCommunities({ pageSize: 4 });
+  const communities = communityData?.items ?? [];
+
   return (
     <div className="min-h-screen overflow-hidden bg-white text-slate-950">
       <SiteHeader />
@@ -100,9 +103,22 @@ export default function LandingPage() {
               <Link href="/communities">Browse all <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {MOCK_COMMUNITIES.map((community) => <CommunityCard key={community.id} community={community} />)}
-          </div>
+          {communitiesLoading ? (
+            <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4" aria-label="Loading live communities">
+              {Array.from({ length: 4 }, (_, i) => <div key={i} className="h-72 animate-pulse rounded-2xl border border-sky-100 bg-sky-50" />)}
+            </div>
+          ) : communitiesError ? (
+            <p role="alert" className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">Communities could not be loaded from the backend right now. Please try again shortly.</p>
+          ) : communities.length ? (
+            <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {communities.map((community) => <CommunityCard key={community.id} community={community} />)}
+            </div>
+          ) : (
+            <div className="mt-8 rounded-2xl border border-dashed border-sky-200 bg-sky-50/70 px-6 py-10 text-center">
+              <p className="font-semibold text-slate-900">No published communities yet</p>
+              <p className="mt-2 text-sm text-slate-600">New communities will appear here once creators publish them.</p>
+            </div>
+          )}
         </section>
 
         <section id="how-it-works" className="scroll-mt-24 border-y border-sky-100/80 bg-[#f7fcfe]">
@@ -144,26 +160,6 @@ export default function LandingPage() {
                   <p className="font-semibold text-white">{title}</p>
                   <p className="mt-1 text-sm leading-6 text-sky-100/70">{description}</p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="reviews" className="scroll-mt-24 border-y border-sky-100/80 bg-[#f7fcfe]">
-          <div className="mx-auto max-w-6xl px-5 py-20 md:py-24">
-            <p className="label-eyebrow">Learner stories</p>
-            <h2 className="mt-3 font-display text-3xl tracking-tight text-slate-950 md:text-4xl">Good things grow in good company.</h2>
-            <div className="mt-9 grid gap-5 md:grid-cols-3">
-              {MOCK_REVIEWS.map((review) => (
-                <figure key={review.id} className="lift rounded-2xl border border-sky-100 bg-white p-6">
-                  <StarRating rating={review.rating} />
-                  <blockquote className="mt-4 text-sm leading-7 text-slate-700">“{review.content}”</blockquote>
-                  <figcaption className="mt-5 flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#dff4fa] text-sm font-semibold text-sky-900">{review.author.display_name.charAt(0)}</span>
-                    <span className="text-sm font-medium text-slate-900">{review.author.display_name}</span>
-                    <BadgeCheck className="h-4 w-4 text-sky-700" aria-label="Verified learner" />
-                  </figcaption>
-                </figure>
               ))}
             </div>
           </div>

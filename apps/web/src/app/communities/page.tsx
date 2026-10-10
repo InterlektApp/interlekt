@@ -21,7 +21,6 @@ import { PageNav } from "@/components/page-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useCategories, useCommunities } from "@/hooks/use-communities";
-import { CATEGORY_ICONS } from "@/lib/mocks";
 
 const ICONS: Record<string, typeof Code2> = {
   code: Code2,
@@ -34,14 +33,25 @@ const ICONS: Record<string, typeof Code2> = {
   sprout: Sprout,
 };
 
+const CATEGORY_ICONS: Record<string, string> = {
+  "technology-programming": "code",
+  "business-entrepreneurship": "briefcase",
+  "design-creative": "palette",
+  "finance-investing": "wallet",
+  "health-wellness": "heart",
+  "language-communication": "megaphone",
+  "agriculture-sustainability": "sprout",
+  "education-teaching": "graduation-cap",
+};
+
 function ExploreInner() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category") ?? "all";
   const search = searchParams.get("q") ?? "";
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
 
-  const { data: categories = [] } = useCategories();
-  const { data, isLoading } = useCommunities({ category, search, page });
+  const { data: categories = [], isError: categoriesError } = useCategories();
+  const { data, isLoading, isError } = useCommunities({ category, search, page });
 
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
@@ -121,6 +131,8 @@ function ExploreInner() {
               );
             })}
           </div>
+          {categoriesError && <p role="alert" className="mt-3 text-sm text-red-700">Categories could not be loaded from the backend.</p>}
+          {!categoriesError && categories.length === 0 && <p className="mt-3 text-xs text-slate-500">No categories are configured on the backend yet.</p>}
         </nav>
 
         <section className="mt-10" aria-labelledby="community-results-title">
@@ -138,7 +150,11 @@ function ExploreInner() {
             </p>
           </div>
 
-          {isLoading ? (
+          {isError ? (
+            <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-10 text-center text-sm text-amber-950">
+              Communities could not be loaded from the backend. Please try again shortly.
+            </div>
+          ) : isLoading ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }, (_, i) => (
                 <div key={i} className="h-72 animate-pulse rounded-2xl border border-sky-100 bg-white" />

@@ -63,15 +63,21 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
 
   const send = async (): Promise<Response> => {
     const headers: Record<string, string> = {};
-    if (body !== undefined) headers["Content-Type"] = "application/json";
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+    if (body !== undefined && !isFormData) headers["Content-Type"] = "application/json";
     if (!anonymous) {
       const token = getAccessToken();
       if (token) headers["Authorization"] = `Bearer ${token}`;
     }
+    const requestBody: BodyInit | undefined = body === undefined
+      ? undefined
+      : isFormData
+        ? body as FormData
+        : JSON.stringify(body);
     return fetch(`${API_BASE}${path}`, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: requestBody,
     });
   };
 

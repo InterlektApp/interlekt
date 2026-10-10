@@ -48,7 +48,7 @@ interlekt/                       # Frontend repo (this one)
 > around — `src/types/api.ts` mirrors the backend's schemas field for field.
 > When in doubt, read their code, not our old doc.
 
-The backend (`apps/api`, FastAPI + PostgreSQL) is being built against the contract in `docs/architecture.md` §3. The frontend doesn't wait for it — read on.
+The backend lives in the separate `InterlektApp/Interlekt-backend` repository (FastAPI + PostgreSQL). The frontend targets that deployed API through the same-origin rewrite; backend implementation and seed data are owned in that repository.
 
 ---
 
@@ -58,7 +58,7 @@ The backend (`apps/api`, FastAPI + PostgreSQL) is being built against the contra
 
 A few of these choices deserve explanation because they shape how you write code every day:
 
-- **Same-origin API topology.** The browser only ever talks to `/api/v1/*`, and Next.js rewrites proxy that to FastAPI. No CORS, no token handling in the browser, no third-party-cookie surprises. Auth is an httpOnly cookie JWT (15-min access, 7-day refresh, deliberately *not* rotated). You write `fetch("/api/v1/...")` and cookies just flow.
+- **Same-origin API topology.** The browser only ever talks to `/api/v1/*`, and Next.js rewrites proxy that to FastAPI. The API client sends the backend's Bearer access token and refreshes it once when needed; browser code never calls the Render host directly.
 - **RSC for the read-only shell, TanStack Query only for interactive widgets.** One owner per resource per page — never both, or you get double fetches and a slower page on the exact low-bandwidth connections our users have.
 - **One Zustand store** (`usePaymentFlowStore`). Filters live in the URL. Server data lives in Query. If you're about to create a second store, stop — that's scope creep wearing a trench coat.
 - **Money is integer kobo, always.** No floats. The API returns `price_kobo`, `platform_fee_kobo`, `creator_amount_kobo`, and a `currency` code. The frontend renders; it never calculates. The money formatter reads `currency` from the API and never hardcodes `₦`, so multi-currency later is a data change, not a rewrite.
@@ -92,20 +92,23 @@ Useful commands:
 
 ### Environment
 
-Only three variables are public (everything else is server-side):
+The production Next.js rewrite defaults to the deployed Render API. `API_ORIGIN` is an optional server-side override. Use only the backend host origin—do not append `/docs` or `/api/v1`. The legacy `NEXT_PUBLIC_API_URL` is for local development and is ignored by the production config.
 
 ```
-API_ORIGIN=http://localhost:8001          # FastAPI, used by next.config rewrites
+API_ORIGIN=https://interlekt-backend.onrender.com  # optional production override
+NEXT_PUBLIC_API_URL=http://localhost:8001           # legacy local-development alias
+APP_ORIGIN=http://localhost:3000
 NEXT_PUBLIC_CLOUDINARY_CLOUD=             # unsigned upload preset name
 NEXT_PUBLIC_CLOUDINARY_PRESET=
 NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=          # public key only — the secret never leaves the backend
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 ```
 
 ### Working without the backend
 
-The frontend runs fully on mocks. `src/lib/mocks.ts` mirrors the API types in `src/types/api.ts` exactly — four Nigerian creators (three verified, one not), four communities across tech/marketing/design, courses with modules and lessons, posts with comments, reviews, and a payment-status simulator that returns `pending` three times then `success` so you can build the polling flow today.
+The frontend no longer substitutes demo records for API responses. If the API is unavailable or its database is empty, data-driven screens show an error or genuine empty state. Local development can still render the public shell with the API down, but account, community, feed, course, and lesson workflows require the backend. Community creation requires at least one real backend category; seed categories before demoing that flow. Cover images use the authenticated `POST /api/v1/uploads/images` endpoint.
 
-The rule: **every mock matches its type exactly.** When the backend goes live, swapping a mock fetch for the real endpoint shouldn't touch a single component. The hand-written `src/types/api.ts` gets replaced by `npm run gen:api` output once `/openapi.json` exists — reconcile the diff carefully, because that diff *is* the contract review.
+Keep the frontend API client and `src/types/api.ts` aligned with the separate backend's camelCase OpenAPI contracts. Do not add local fixture data as a fallback for production API failures.
 
 ---
 
@@ -141,7 +144,7 @@ The `ui-ux-pro-max` skill bundle in `.opencode/skills/` has searchable style, pa
 |---|---|
 | `docs/architecture.md` | The API contract (§3), auth (§4), payment flow (§6), and every open decision (§7). Read §1 + §13 first. |
 | `apps/web/src/types/api.ts` | The frontend's view of the backend contract. |
-| `apps/web/src/lib/mocks.ts` | Stand-in backend. Keep it in sync with the types. |
+| `apps/web/src/lib/api/client.ts` | Same-origin backend client, Bearer auth, and refresh behavior. |
 | `apps/web/src/components/enroll-card.tsx` | The most reused component — four states, one card. |
 | `apps/web/src/app/(learner)/enroll/[communityId]/page.tsx` | The payment state machine. Handle with care. |
 | `apps/web/src/components/{logo,site-header,site-footer}.tsx` | Brand shell. Change the brand here, everywhere updates. |

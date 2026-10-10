@@ -3,20 +3,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, patch } from "@/lib/api/client";
 import { qk } from "@/lib/query-keys";
-import { MOCK_CREATOR_PROFILES } from "@/lib/mocks";
 import type { CreatorProfileResponse, ProfileResponse, ProfileUpdateRequest } from "@/types/api";
 
-/** GET /creators/{userId} — falls back to mocks on any failure. */
+/** GET /creators/{userId} — the API response is authoritative. */
 export function useCreator(userId: string) {
   return useQuery({
     queryKey: qk.creators.detail(userId),
-    queryFn: async (): Promise<CreatorProfileResponse | null> => {
-      try {
-        return await get<CreatorProfileResponse>(`/creators/${encodeURIComponent(userId)}`);
-      } catch {
-        return MOCK_CREATOR_PROFILES[userId] ?? null;
-      }
-    },
+    queryFn: () => get<CreatorProfileResponse>(`/creators/${encodeURIComponent(userId)}`),
+    enabled: Boolean(userId),
   });
 }
 

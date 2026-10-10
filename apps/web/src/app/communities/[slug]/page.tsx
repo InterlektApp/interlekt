@@ -7,14 +7,12 @@ import { notFound } from "next/navigation";
 import { BookOpen, Users } from "lucide-react";
 import { EnrollCard } from "@/components/enroll-card";
 import { MoneyAmount } from "@/components/money-amount";
-import { StarRating } from "@/components/star-rating";
 import { VerificationBadge } from "@/components/verification-badge";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useMe } from "@/hooks/use-auth";
 import { useCommunity } from "@/hooks/use-communities";
 import { useMyEnrollments } from "@/hooks/use-enrollments";
-import { MOCK_REVIEWS } from "@/lib/mocks";
 
 interface CommunityDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -46,7 +44,6 @@ export default function CommunityDetailPage({ params }: CommunityDetailPageProps
   const enrollment =
     enrollments.find((e) => e.community.id === community.id && e.status === "active") ?? null;
   const isOwner = !!me && me.id === community.creator.userId;
-  const reviews = MOCK_REVIEWS.filter((r) => r.community_id === community.id);
 
   return (
     <div className="min-h-screen bg-[#f7fbfd] text-[#102f45]">
@@ -157,29 +154,6 @@ export default function CommunityDetailPage({ params }: CommunityDetailPageProps
               )}
             </section>
 
-            <section className="mt-9" aria-labelledby="reviews-title">
-              <div className="border-b border-sky-100 pb-3">
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-800">From the community</p>
-                <h2 id="reviews-title" className="mt-1 font-display text-xl font-semibold text-[#092d46]">What members say</h2>
-              </div>
-              {reviews.length === 0 ? (
-                <p className="mt-4 rounded-xl border border-dashed border-sky-200 bg-white p-5 text-sm text-slate-600">No reviews yet — be the first.</p>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {reviews.map((r) => (
-                    <article key={r.id} className="rounded-xl border border-sky-100 bg-white p-4 shadow-sm md:p-5">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <p className="font-medium text-[#092d46]">{r.author.display_name}</p>
-                        <StarRating rating={r.rating} />
-                      </div>
-                      {r.content && (
-                        <p className="mt-3 text-sm leading-7 text-slate-600">{r.content}</p>
-                      )}
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
