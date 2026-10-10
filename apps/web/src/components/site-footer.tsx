@@ -20,7 +20,6 @@ const COLUMNS: Array<{ heading: string; links: Array<{ label: string; href: stri
   {
     heading: "Company",
     links: [
-      { label: "Terms", href: "/terms" },
       { label: "Log in", href: "/auth/login" },
       { label: "Sign up", href: "/auth/register" },
     ],
@@ -58,7 +57,7 @@ export function SiteFooter() {
       <div className="border-t border-sky-100/80">
         <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 Interlekt. Made for African learners and creators.</p>
-          <p className="font-mono">NGN · Paystack secured</p>
+          <p className="font-mono">Learn · Connect · Grow</p>
         </div>
       </div>
     </footer>

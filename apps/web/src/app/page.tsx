@@ -5,9 +5,8 @@ import {
   ArrowRight,
   BookOpenCheck,
   Compass,
-  MessagesSquare,
+  Star,
   ShieldCheck,
-  Sparkles,
   Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,17 +15,30 @@ import { HeroIconPattern } from "@/components/hero-icon-pattern";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useCommunities } from "@/hooks/use-communities";
+import type { CommunityListItem } from "@/types/api";
+
+function CommunityRating({ community }: { community: CommunityListItem }) {
+  const summary = community as CommunityListItem & { rating?: number | null; reviewCount?: number };
+  const rating = summary.rating ?? null;
+  const count = summary.reviewCount ?? 0;
+  return (
+    <p className="inline-flex items-center gap-1.5 px-1 text-xs text-slate-600" aria-label={count > 0 && rating !== null ? `${rating.toFixed(1)} out of 5 from ${count} ${count === 1 ? "rating" : "ratings"}` : "No ratings yet"}>
+      <Star className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+      {count > 0 && rating !== null ? `${rating.toFixed(1)} · ${count} ${count === 1 ? "rating" : "ratings"}` : "No ratings yet"}
+    </p>
+  );
+}
 
 const STEPS = [
   {
     icon: Compass,
     title: "Find your people",
-    text: "Explore welcoming communities led by people who have done the work. Real reviews and clear pricing help you choose with confidence.",
+    text: "Explore published communities led by people who have done the work. Clear community details and pricing help you choose with confidence.",
   },
   {
     icon: Wallet,
     title: "Join with ease",
-    text: "Learn for free or pay securely in naira. Choose a one-time payment or a monthly membership—each creator sets the terms.",
+    text: "Compare community details and prices in naira before deciding where you want to learn.",
   },
   {
     icon: BookOpenCheck,
@@ -37,12 +49,12 @@ const STEPS = [
 
 const TRUST_POINTS = [
   { icon: ShieldCheck, label: "Verified creators" },
-  { icon: MessagesSquare, label: "Reviews from real learners" },
-  { icon: Sparkles, label: "Secure local payments" },
+  { icon: Compass, label: "Published community listings" },
+  { icon: Wallet, label: "Clear pricing in naira" },
 ];
 
 export default function LandingPage() {
-  const { data: communityData, isLoading: communitiesLoading, isError: communitiesError } = useCommunities({ pageSize: 4 });
+  const { data: communityData, isLoading: communitiesLoading, isError: communitiesError, refetch } = useCommunities({ pageSize: 4 });
   const communities = communityData?.items ?? [];
 
   return (
@@ -108,10 +120,18 @@ export default function LandingPage() {
               {Array.from({ length: 4 }, (_, i) => <div key={i} className="h-72 animate-pulse rounded-2xl border border-sky-100 bg-sky-50" />)}
             </div>
           ) : communitiesError ? (
-            <p role="alert" className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">Communities could not be loaded from the backend right now. Please try again shortly.</p>
+            <div role="alert" className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
+              <p>Communities could not be loaded from the backend right now.</p>
+              <button type="button" onClick={() => void refetch()} className="mt-2 font-semibold underline underline-offset-2">Retry community list</button>
+            </div>
           ) : communities.length ? (
             <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {communities.map((community) => <CommunityCard key={community.id} community={community} />)}
+              {communities.map((community) => (
+                <article key={community.id}>
+                  <CommunityCard community={community} />
+                  <CommunityRating community={community} />
+                </article>
+              ))}
             </div>
           ) : (
             <div className="mt-8 rounded-2xl border border-dashed border-sky-200 bg-sky-50/70 px-6 py-10 text-center">
@@ -145,16 +165,16 @@ export default function LandingPage() {
             <div className="p-8 md:p-12 lg:p-14">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a9e4f2]">For the ones who teach</p>
               <h2 className="mt-4 max-w-xl font-display text-3xl tracking-tight text-white md:text-4xl">Turn what you know into a community that grows.</h2>
-              <p className="mt-4 max-w-lg leading-7 text-sky-100/80">Share your experience, build a home for your learners, and earn from your knowledge—with local pricing and payments built in.</p>
+              <p className="mt-4 max-w-lg leading-7 text-sky-100/80">Share your experience, build a home for learners, and set a community price in naira.</p>
               <Button size="lg" className="press mt-8 rounded-full bg-[#b5e5f1] px-6 text-[#073451] hover:bg-[#d1f0f7]" asChild>
                 <Link href="/auth/register">Start teaching <ArrowRight className="h-4 w-4" /></Link>
               </Button>
             </div>
             <div className="flex flex-col justify-center gap-3 bg-white/[0.045] p-7 md:p-10">
               {[
-                ["Set your price", "One-time or monthly—you decide."],
-                ["See your progress", "Members and revenue in one clear view."],
-                ["Get discovered", "Build trust with verified profiles and learner reviews."],
+                ["Set your price", "Choose the price shown on your community listing."],
+                ["See your progress", "Track your community and its members."],
+                ["Get discovered", "Build trust with a verified profile and community ratings when available."],
               ].map(([title, description]) => (
                 <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
                   <p className="font-semibold text-white">{title}</p>

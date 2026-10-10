@@ -57,7 +57,8 @@ export default function RegisterPage() {
         role: data.role,
       },
       {
-        onSuccess: () => router.push(data.role === "creator" ? "/studio" : "/dashboard"),
+        onSuccess: (user) =>
+          router.replace(user.roles.includes("creator") ? "/onboarding" : "/dashboard"),
         onError: (err) => {
           if (err instanceof ApiError && err.code === "email_taken") {
             setError("email", { message: "An account with this email already exists." });

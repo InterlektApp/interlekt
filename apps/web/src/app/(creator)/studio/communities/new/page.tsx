@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, ImagePlus, LoaderCircle, Plus, Tag, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCategories } from "@/hooks/use-communities";
-import { post } from "@/lib/api/client";
+import { ApiError, post } from "@/lib/api/client";
 import type { CommunityCreateRequest, CommunityDetail } from "@/types/api";
 
 type UploadImageResponse = { url: string; publicId: string; resourceType: string };
@@ -131,10 +131,17 @@ export default function NewCommunityPage() {
             <input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-sky-200 px-4 font-normal outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-100" />
             <span className="mt-1 block text-xs font-normal text-slate-500">Enter 0 for a free community.</span>
           </label>
-          {createCommunity.isError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{createCommunity.error.message}</p>}
+          {createCommunity.isError && (
+            <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              <p>{createCommunity.error.message}</p>
+              {createCommunity.error instanceof ApiError && createCommunity.error.code === "creator_profile_required" && (
+                <p className="mt-2">Complete your creator profile first. <Link href="/onboarding" className="font-semibold underline">Go to creator onboarding</Link>.</p>
+              )}
+            </div>
+          )}
           {submitNotice && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-950">{submitNotice}</p>}
           <div className="flex flex-wrap gap-3 border-t border-sky-100 pt-5">
-            <Button type="submit" disabled={createCommunity.isPending || categoriesLoading || categoriesError}>
+            <Button type="submit" disabled={createCommunity.isPending || categoriesLoading || categoriesError || noCategories}>
               {createCommunity.isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               {createCommunity.isPending ? "Creating…" : "Create community"}
             </Button>

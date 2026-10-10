@@ -28,12 +28,8 @@ export default async function TransactionsPage({ params }: TransactionsPageProps
             <p className="label-eyebrow mt-6">Community finances</p>
             <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Transactions</h1>
             <p className="mt-4 max-w-xl text-sm leading-6 text-slate-600">
-              Payment history for this community will include gross amounts, platform fees, and your share. Payouts are coming soon.
+              Transaction history and payout records are unavailable because the backend does not currently expose a community transactions or payouts endpoint.
             </p>
-            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-950">
-              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-sky-700" />
-              Payouts coming soon
-            </div>
             <Button asChild className="mt-8">
               <Link href={`/studio/communities/${id}`}>
                 <ArrowLeft aria-hidden="true" className="h-4 w-4" />
@@ -44,17 +40,17 @@ export default async function TransactionsPage({ params }: TransactionsPageProps
 
           <div className="p-6 sm:p-9 lg:p-11">
             <p className="label-eyebrow">Earnings overview</p>
-            <h2 className="mt-2 text-lg font-semibold text-slate-950">Your payment summary</h2>
-            <div className="mt-5 rounded-2xl border border-dashed border-sky-200 bg-sky-50/50 px-5 py-8 text-center sm:px-8">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white text-sky-900 shadow-sm">
+            <h2 className="mt-2 text-lg font-semibold text-slate-950">No live payment data available</h2>
+            <div role="status" className="mt-5 rounded-2xl border border-dashed border-amber-200 bg-amber-50/60 px-5 py-8 text-center sm:px-8">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white text-amber-900 shadow-sm">
                 <ReceiptText aria-hidden="true" className="h-6 w-6" />
               </div>
-              <p className="mt-4 text-sm font-semibold text-slate-800">Transaction details will appear here</p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">No payment or payout controls are available on this page yet.</p>
+              <p className="mt-4 text-sm font-semibold text-slate-800">Transactions cannot be loaded yet</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">No payment totals, transaction rows, or payout status are being fabricated or requested from an unsupported endpoint.</p>
             </div>
             <div className="mt-4 flex items-start gap-3 rounded-xl border border-sky-100 bg-white p-4">
               <CircleDollarSign aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-sky-900" />
-              <p className="text-xs leading-5 text-slate-500">This page does not modify payments, enrollment, or payout settings.</p>
+              <p className="text-xs leading-5 text-slate-500">This screen is read-only and does not modify payments, enrollment, or payout settings.</p>
             </div>
           </div>
         </div>

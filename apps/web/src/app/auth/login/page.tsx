@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,8 +25,6 @@ const inputClass =
 
 function LoginFormInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/dashboard";
   const [serverError, setServerError] = useState<string | null>(null);
 
   const login = useLogin();
@@ -43,7 +41,8 @@ function LoginFormInner() {
     login.mutate(
       { email: data.email, password: data.password },
       {
-        onSuccess: () => router.push(next),
+        onSuccess: (user) =>
+          router.replace(user.roles.includes("creator") ? "/onboarding" : "/dashboard"),
         onError: (err) => setServerError(apiErrorMessage(err)),
       },
     );
@@ -149,9 +148,7 @@ function LoginFormInner() {
 export default function LoginPage() {
   return (
     <AuthShell side="left">
-      <Suspense>
-        <LoginFormInner />
-      </Suspense>
+      <LoginFormInner />
     </AuthShell>
   );
 }

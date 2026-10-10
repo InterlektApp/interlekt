@@ -11,6 +11,7 @@ import {
   Megaphone,
   Palette,
   Search,
+  Star,
   Sprout,
   Users,
   Wallet,
@@ -21,6 +22,19 @@ import { PageNav } from "@/components/page-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useCategories, useCommunities } from "@/hooks/use-communities";
+import type { CommunityListItem } from "@/types/api";
+
+function CommunityRating({ community }: { community: CommunityListItem }) {
+  const summary = community as CommunityListItem & { rating?: number | null; reviewCount?: number };
+  const rating = summary.rating ?? null;
+  const count = summary.reviewCount ?? 0;
+  return (
+    <p className="inline-flex items-center gap-1.5 px-1 text-xs text-slate-600" aria-label={count > 0 && rating !== null ? `${rating.toFixed(1)} out of 5 from ${count} ${count === 1 ? "rating" : "ratings"}` : "No ratings yet"}>
+      <Star className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+      {count > 0 && rating !== null ? `${rating.toFixed(1)} · ${count} ${count === 1 ? "rating" : "ratings"}` : "No ratings yet"}
+    </p>
+  );
+}
 
 const ICONS: Record<string, typeof Code2> = {
   code: Code2,
@@ -50,17 +64,18 @@ function ExploreInner() {
   const search = searchParams.get("q") ?? "";
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
 
-  const { data: categories = [], isError: categoriesError } = useCategories();
-  const { data, isLoading, isError } = useCommunities({ category, search, page });
+  const { data: categories = [], isLoading: categoriesLoading, isError: categoriesError, refetch: refetchCategories } = useCategories();
+  const { data, isLoading, isError, refetch } = useCommunities({ category, search, page });
 
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  const baseHref = `/communities?${new URLSearchParams({
+  const queryString = new URLSearchParams({
     ...(category !== "all" ? { category } : {}),
     ...(search ? { q: search } : {}),
-  }).toString()}`;
+  }).toString();
+  const baseHref = queryString ? `/communities?${queryString}` : "/communities";
 
   return (
     <div className="min-h-screen bg-[#f7fbfd] text-[#102f45]">
@@ -77,8 +92,7 @@ function ExploreInner() {
               Find your community
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600 md:text-lg">
-              Learning communities led by people worth learning from — verified,
-              reviewed, and priced in naira.
+              Published learning communities led by creators, with details and prices in naira.
             </p>
 
             <form action="/communities" method="get" className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -87,8 +101,8 @@ function ExploreInner() {
                 <input
                   name="q"
                   defaultValue={search}
-                  placeholder="Search by topic, skill, or creator…"
-                  aria-label="Search communities by topic, skill, or creator"
+                  placeholder="Search community titles and descriptions…"
+                  aria-label="Search community titles and descriptions"
                   className="h-12 w-full rounded-xl border border-sky-200 bg-white pl-12 pr-4 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-sky-300 focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
                 />
               </div>
@@ -117,7 +131,7 @@ function ExploreInner() {
               return (
                 <Link
                   key={c.id}
-                  href={`/communities?category=${c.slug}${search ? `&q=${encodeURIComponent(search)}` : ""}`}
+                  href={`/communities?${new URLSearchParams({ category: c.slug, ...(search ? { q: search } : {}) }).toString()}`}
                   aria-current={category === c.slug ? "page" : undefined}
                   className={`inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${
                     category === c.slug
@@ -131,8 +145,9 @@ function ExploreInner() {
               );
             })}
           </div>
-          {categoriesError && <p role="alert" className="mt-3 text-sm text-red-700">Categories could not be loaded from the backend.</p>}
-          {!categoriesError && categories.length === 0 && <p className="mt-3 text-xs text-slate-500">No categories are configured on the backend yet.</p>}
+          {categoriesLoading && <p className="mt-3 text-xs text-slate-500" aria-live="polite">Loading categories…</p>}
+          {categoriesError && <div role="alert" className="mt-3 flex flex-wrap items-center gap-3 text-sm text-red-700"><span>Categories could not be loaded from the backend.</span><button type="button" onClick={() => void refetchCategories()} className="font-semibold underline underline-offset-2">Try again</button></div>}
+          {!categoriesLoading && !categoriesError && categories.length === 0 && <p className="mt-3 text-xs text-slate-500">No categories are configured on the backend yet.</p>}
         </nav>
 
         <section className="mt-10" aria-labelledby="community-results-title">
@@ -144,15 +159,14 @@ function ExploreInner() {
               </h2>
             </div>
             <p className="text-sm text-slate-500" aria-live="polite">
-              {isLoading
-                ? "Finding communities…"
-                : `${total.toLocaleString()} ${total === 1 ? "community" : "communities"}`}
+              {isLoading ? "Finding communities…" : isError ? "Community count unavailable" : `${total.toLocaleString()} ${total === 1 ? "community" : "communities"}`}
             </p>
           </div>
 
           {isError ? (
             <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-10 text-center text-sm text-amber-950">
-              Communities could not be loaded from the backend. Please try again shortly.
+              <p>Communities could not be loaded from the backend. Please try again.</p>
+              <button type="button" onClick={() => void refetch()} className="mt-3 font-semibold underline underline-offset-2">Retry community list</button>
             </div>
           ) : isLoading ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -160,24 +174,30 @@ function ExploreInner() {
                 <div key={i} className="h-72 animate-pulse rounded-2xl border border-sky-100 bg-white" />
               ))}
             </div>
+          ) : items.length === 0 && total > 0 ? (
+            <div className="rounded-2xl border border-sky-100 bg-white px-6 py-10 text-center">
+              <p className="text-sm text-slate-600">There are no communities on page {page}.</p>
+              <PageNav page={page} pages={totalPages} total={total} baseHref={baseHref} className="mt-4 border-t border-sky-100" />
+            </div>
           ) : items.length === 0 ? (
             <div className="rounded-2xl border border-sky-100 bg-white px-6 py-14 text-center shadow-sm md:px-12">
               <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e5f6fb] text-sky-800">
                 <Users className="h-6 w-6" aria-hidden="true" />
               </span>
               <p className="mt-4 text-lg font-semibold text-[#092d46]">No communities found</p>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-                Try a different search term or browse another category to find a space that fits.
-              </p>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">Try a different search term or return to the full community directory.</p>
             </div>
           ) : (
             <>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {items.map((c) => (
-                  <CommunityCard key={c.id} community={c} />
+                  <article key={c.id}>
+                    <CommunityCard community={c} />
+                    <CommunityRating community={c} />
+                  </article>
                 ))}
               </div>
-              <PageNav page={page} pages={totalPages} total={total} baseHref={baseHref || "/communities"} className="mt-4 border-t border-sky-100" />
+              <PageNav page={page} pages={totalPages} total={total} baseHref={baseHref} className="mt-4 border-t border-sky-100" />
             </>
           )}
         </section>

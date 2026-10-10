@@ -7,6 +7,7 @@ import { ArrowRight, Megaphone, Pin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCommunity } from "@/hooks/use-communities";
 import { get, post } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
 import type { Paginated } from "@/types/api";
 
 type PostItem = {
@@ -37,7 +38,7 @@ export default function FeedPage({ params }: FeedPageProps) {
   const { data: community } = useCommunity(slug);
   const [content, setContent] = useState("");
   const feedKey = ["community-feed", slug];
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error: feedError } = useQuery({
     queryKey: feedKey,
     queryFn: () => get<Paginated<PostItem>>(`/communities/${encodeURIComponent(slug)}/posts?page=1&pageSize=50`),
   });
@@ -76,7 +77,7 @@ export default function FeedPage({ params }: FeedPageProps) {
 
         <section aria-label="Community posts" className="mt-5 space-y-4">
           {isLoading ? <div className="h-40 animate-pulse rounded-2xl border border-sky-100 bg-sky-50" />
-            : isError ? <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">The feed could not be loaded. Sign in to an enrolled account and try again.</div>
+            : isError ? <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">The feed could not be loaded. {apiErrorMessage(feedError)} Sign in to an enrolled account and try again.</div>
             : !data?.items.length ? <div className="rounded-2xl border border-dashed border-sky-200 bg-white p-10 text-center"><p className="font-semibold text-slate-900">No posts yet</p><p className="mt-2 text-sm text-slate-600">Start the first conversation in this community.</p></div>
             : data.items.map((item) => <article key={item.id} className="overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-sm">
               {item.isAnnouncement && <div className="border-b border-cyan-100 bg-cyan-50 px-5 py-2.5"><p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-cyan-900"><Megaphone className="h-3.5 w-3.5" aria-hidden="true" />Announcement</p></div>}

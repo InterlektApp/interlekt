@@ -3,14 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CheckCircle2, Loader2, LogOut, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLogout, useMe } from "@/hooks/use-auth";
-import { useProfile, useUpdateProfile } from "@/hooks/use-users";
+import { useUpdateProfile } from "@/hooks/use-users";
+import { get } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
+import { qk } from "@/lib/query-keys";
+import type { ProfileResponse } from "@/types/api";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters").max(120),
@@ -22,7 +26,12 @@ type ProfileForm = z.infer<typeof profileSchema>;
 export default function ProfilePage() {
   const router = useRouter();
   const { data: me } = useMe();
-  const { data: profile, isLoading } = useProfile();
+  const { data: profile, isLoading, isError, error, refetch } = useQuery({
+    queryKey: qk.users.me(),
+    queryFn: () => get<ProfileResponse>("/users/me"),
+    retry: false,
+    staleTime: 60_000,
+  });
   const update = useUpdateProfile();
   const logout = useLogout();
   const [saved, setSaved] = useState(false);
@@ -57,6 +66,23 @@ export default function ProfilePage() {
       <main className="mx-auto max-w-3xl animate-pulse px-4 py-8 sm:py-10" aria-label="Loading profile">
         <div className="h-8 w-1/3 rounded-lg bg-sky-100" />
         <div className="mt-6 h-80 rounded-3xl border border-sky-100 bg-sky-50" />
+      </main>
+    );
+  }
+
+  if (isError) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:py-10">
+        <p className="label-eyebrow">Account</p>
+        <h1 className="mt-2 font-display text-3xl tracking-tight text-slate-950">Profile</h1>
+        <div role="alert" className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 px-6 py-8 text-center">
+          <p className="font-semibold text-slate-950">Your profile could not be loaded</p>
+          <p className="mt-2 text-sm leading-6 text-amber-950">{apiErrorMessage(error)}</p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Button variant="outline" onClick={() => void refetch()}>Try again</Button>
+            <Button asChild><Link href="/auth/login?next=/profile">Sign in</Link></Button>
+          </div>
+        </div>
       </main>
     );
   }

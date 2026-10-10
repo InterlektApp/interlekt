@@ -6,8 +6,10 @@ import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
 import { CommunityCard } from "@/components/community-card";
 import { VerificationBadge } from "@/components/verification-badge";
+import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { ApiError } from "@/lib/api/client";
 import { useCommunities } from "@/hooks/use-communities";
 import { useCreator } from "@/hooks/use-users";
 
@@ -18,8 +20,8 @@ interface CreatorPageProps {
 export default function CreatorPage({ params }: CreatorPageProps) {
   // Route param carries the backend user UUID (see CommunityCard links).
   const { slug: userId } = use(params);
-  const { data: creator, isLoading } = useCreator(userId);
-  const { data: list } = useCommunities({ pageSize: 50 });
+  const { data: creator, isLoading, isError, error, refetch } = useCreator(userId);
+  const { data: list, isLoading: communitiesLoading, isError: communitiesError, refetch: refetchCommunities } = useCommunities({ pageSize: 100 });
 
   if (isLoading) {
     return (
@@ -32,6 +34,24 @@ export default function CreatorPage({ params }: CreatorPageProps) {
             <div className="h-64 rounded-2xl bg-white" />
             <div className="h-64 rounded-2xl bg-white" />
             <div className="h-64 rounded-2xl bg-white" />
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (isError && error instanceof ApiError && (error.status === 404 || error.status === 422)) notFound();
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-[#f7fbfd] text-[#102f45]">
+        <SiteHeader />
+        <main className="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
+          <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-950">
+            <h1 className="text-xl font-semibold">Creator profile is unavailable</h1>
+            <p className="mt-2 text-sm leading-6">We could not load this creator from the backend. Please check your connection and try again.</p>
+            <Button type="button" onClick={() => void refetch()} className="mt-5">Retry</Button>
           </div>
         </main>
         <SiteFooter />
@@ -62,8 +82,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
               </h1>
               <p className="mt-2 inline-flex items-center gap-2 text-sm text-slate-600">
                 <Users className="h-4 w-4 text-sky-800" aria-hidden="true" />
-                {creator.memberCount.toLocaleString()} members across {creator.communityCount}{" "}
-                {creator.communityCount === 1 ? "community" : "communities"}
+                {creator.communityCount.toLocaleString()} published {creator.communityCount === 1 ? "community" : "communities"}
               </p>
             </div>
           </div>
@@ -94,24 +113,39 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                 Communities by {creator.displayName.split(" ")[0]}
               </h2>
             </div>
-            {communities.length > 0 && (
-              <span className="text-sm text-slate-500">{communities.length} {communities.length === 1 ? "community" : "communities"}</span>
-            )}
+            <span className="text-sm text-slate-500">{creator.communityCount} {creator.communityCount === 1 ? "community" : "communities"}</span>
           </div>
-          {communities.length === 0 ? (
+          {communitiesError ? (
+            <div role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-8 text-center text-sm text-amber-950">
+              <p>Published communities could not be loaded from the backend.</p>
+              <button type="button" onClick={() => void refetchCommunities()} className="mt-3 font-semibold underline underline-offset-2">Retry community list</button>
+            </div>
+          ) : communitiesLoading ? (
+            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading published communities">
+              {Array.from({ length: 3 }, (_, i) => <div key={i} className="h-64 animate-pulse rounded-2xl border border-sky-100 bg-white" />)}
+            </div>
+          ) : communities.length === 0 ? (
             <div className="mt-5 rounded-2xl border border-dashed border-sky-200 bg-white px-6 py-12 text-center">
-              <p className="font-medium text-[#092d46]">No published communities yet.</p>
-              <p className="mt-2 text-sm text-slate-600">Check back later to see what this creator is sharing.</p>
-              <Link href="/communities" className="mt-4 inline-flex rounded-full px-4 py-2 text-sm font-semibold text-sky-900 underline decoration-sky-300 underline-offset-4 hover:text-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
-                Browse all communities
-              </Link>
+              {creator.communityCount === 0 ? (
+                <>
+                  <p className="font-medium text-[#092d46]">No published communities yet.</p>
+                  <p className="mt-2 text-sm text-slate-600">Check back later to see what this creator is sharing.</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium text-[#092d46]">This creator has published communities, but none appeared in the loaded directory page.</p>
+                  <p className="mt-2 text-sm text-slate-600">The backend reports {creator.communityCount} published {creator.communityCount === 1 ? "community" : "communities"}; browse the full directory to find them.</p>
+                </>
+              )}
+              <Link href="/communities" className="mt-4 inline-flex rounded-full px-4 py-2 text-sm font-semibold text-sky-900 underline decoration-sky-300 underline-offset-4 hover:text-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Browse all communities</Link>
             </div>
           ) : (
-            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {communities.map((c) => (
-                <CommunityCard key={c.id} community={c} />
-              ))}
-            </div>
+            <>
+              {communities.length < creator.communityCount && <p className="mt-4 text-sm text-slate-500">Showing {communities.length} of {creator.communityCount} published communities reported by this creator profile; the current directory page may not include them all.</p>}
+              <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {communities.map((c) => <CommunityCard key={c.id} community={c} />)}
+              </div>
+            </>
           )}
         </section>
       </main>

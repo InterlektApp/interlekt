@@ -2,16 +2,26 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, LogOut, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLeaveCommunity, useMyEnrollments } from "@/hooks/use-enrollments";
 import { MoneyAmount } from "@/components/money-amount";
+import { useLeaveCommunity } from "@/hooks/use-enrollments";
+import { apiErrorMessage } from "@/lib/api/errors";
+import { get } from "@/lib/api/client";
+import { qk } from "@/lib/query-keys";
+import type { EnrollmentResponse, Paginated } from "@/types/api";
 
 export default function MyCommunitiesPage() {
-  const { data: enrollments = [], isLoading } = useMyEnrollments();
+  const { data: enrollments = [], isLoading, isError, error } = useQuery({
+    queryKey: qk.enrollments.mine(),
+    queryFn: async () => {
+      const data = await get<Paginated<EnrollmentResponse>>("/enrollments/mine?page=1&pageSize=50");
+      return data.items;
+    },
+  });
   const leave = useLeaveCommunity();
   const [leavingId, setLeavingId] = useState<string | null>(null);
-
   const active = enrollments.filter((e) => e.status === "active");
 
   return (
@@ -26,16 +36,19 @@ export default function MyCommunitiesPage() {
           </div>
           <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-200 bg-white/85 px-4 py-2 text-sm font-medium text-sky-950">
             <UsersRound className="h-4 w-4 text-cyan-700" aria-hidden="true" />
-            <span>{active.length} {active.length === 1 ? "community" : "communities"} enrolled</span>
+            <span>{isLoading ? "Loading enrollments" : isError ? "Enrollments unavailable" : `${active.length} ${active.length === 1 ? "community" : "communities"} enrolled`}</span>
           </div>
         </div>
       </header>
+
+      {isError && <p role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">Your enrollments could not be loaded. {apiErrorMessage(error)} Sign in with your learner account and try again.</p>}
+      {leave.isError && <p role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800">Could not leave the community. {apiErrorMessage(leave.error)}</p>}
 
       {isLoading ? (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading communities">
           {Array.from({ length: 3 }, (_, i) => <div key={i} className="h-64 animate-pulse rounded-2xl border border-sky-100 bg-sky-50" />)}
         </div>
-      ) : active.length === 0 ? (
+      ) : isError ? null : active.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-sky-300 bg-white px-6 py-12 text-center">
           <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-cyan-800"><BookOpen className="h-6 w-6" aria-hidden="true" /></span>
           <p className="mt-4 font-semibold text-slate-950">Nothing here yet</p>
@@ -46,7 +59,7 @@ export default function MyCommunitiesPage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {active.map((e) => (
             <article key={e.id} className="overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-              <Link href={`/communities/${e.community.slug}`} className="group block rounded-t-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-inset">
+              <Link href={`/communities/${encodeURIComponent(e.community.slug)}`} className="group block rounded-t-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-inset">
                 <div className="relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br from-sky-100 via-cyan-50 to-white">
                   <span className="absolute -right-5 -top-8 h-32 w-32 rounded-full border-[18px] border-white/40" aria-hidden="true" />
                   <span className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-sky-200 bg-white/85 font-display text-3xl font-semibold text-sky-800 shadow-sm">{e.community.title.charAt(0)}</span>
@@ -62,7 +75,7 @@ export default function MyCommunitiesPage() {
               </Link>
               <div className="flex gap-2 border-t border-sky-100 bg-sky-50/50 p-3">
                 <Button variant="outline" size="sm" className="flex-1 bg-white" asChild>
-                  <Link href={`/communities/${e.community.slug}/classroom`}>Classroom <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></Link>
+                  <Link href={`/communities/${encodeURIComponent(e.community.slug)}/classroom`}>Classroom <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></Link>
                 </Button>
                 <Button
                   variant="ghost"

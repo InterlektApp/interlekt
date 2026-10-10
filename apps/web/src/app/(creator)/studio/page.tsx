@@ -5,12 +5,57 @@ import { ArrowUpRight, BookOpen, Plus, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/stat-card";
 import { CommunityCard } from "@/components/community-card";
+import { useMyCreatorProfile } from "@/hooks/use-creator-onboarding";
 import { useMyCommunities } from "@/hooks/use-communities";
 
 export default function StudioPage() {
+  const profile = useMyCreatorProfile();
   // GET /communities/mine — empty when signed out or unreachable.
   const { data: mine = [], isLoading } = useMyCommunities();
   const totalMembers = mine.reduce((n, c) => n + c.memberCount, 0);
+
+  if (profile.isPending) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <p role="status" aria-busy="true" className="text-sm text-slate-600">
+          Checking your creator profile…
+        </p>
+      </main>
+    );
+  }
+
+  if (profile.isError) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+          <h1 className="text-xl font-semibold text-slate-950">We couldn’t check your creator profile</h1>
+          <p role="alert" className="mt-2 text-sm leading-6 text-slate-700">
+            {profile.error instanceof Error ? profile.error.message : "Please try again before creating a community."}
+          </p>
+          <Button type="button" className="mt-4" onClick={() => void profile.refetch()}>
+            Try again
+          </Button>
+        </section>
+      </main>
+    );
+  }
+
+  if (!profile.data.expertise.length) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <section className="rounded-2xl border border-sky-100 bg-sky-50/70 p-6">
+          <p className="label-eyebrow">One step before your studio</p>
+          <h1 className="mt-2 text-2xl font-semibold text-slate-950">Complete your creator profile</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            Add at least one expertise area to your profile before creating a community.
+          </p>
+          <Button asChild className="mt-4">
+            <Link href="/onboarding">Continue to profile setup</Link>
+          </Button>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">

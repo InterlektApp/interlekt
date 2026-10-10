@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { use } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowUpRight, BookOpen, Settings, Users, Wallet } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/stat-card";
 import { MoneyAmount } from "@/components/money-amount";
 import { useMyCommunities } from "@/hooks/use-communities";
+import { ApiError, post } from "@/lib/api/client";
+import type { CommunityDetail } from "@/types/api";
 
 interface ManagePageProps {
   params: Promise<{ id: string }>;
@@ -18,6 +21,15 @@ export default function ManageCommunityPage({ params }: ManagePageProps) {
   // Matches by id or slug — manage links use the list item's id.
   const { data: mine = [], isLoading } = useMyCommunities();
   const community = mine.find((c) => c.id === id || c.slug === id);
+  const queryClient = useQueryClient();
+  const togglePublish = useMutation({
+    mutationFn: () => post<CommunityDetail>(
+      `/communities/${encodeURIComponent(community!.slug)}/${community!.isPublished ? "unpublish" : "publish"}`,
+    ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["communities"] });
+    },
+  });
 
   if (isLoading) {
     return (
@@ -80,6 +92,28 @@ export default function ManageCommunityPage({ params }: ManagePageProps) {
       <section aria-label="Community overview" className="mt-5 grid gap-4 sm:grid-cols-2">
         <StatCard label="Members" value={community.memberCount.toLocaleString()} className="min-h-28" />
         <StatCard label="Status" value={community.isPublished ? "Live" : "Draft"} className="min-h-28" />
+      </section>
+
+      <section className="mt-5 rounded-2xl border border-sky-100 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="font-semibold text-slate-950">Publishing</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              {community.isPublished ? "Your community is visible to learners." : "Publish this community to make it visible to learners."}
+            </p>
+          </div>
+          <Button type="button" disabled={togglePublish.isPending} onClick={() => togglePublish.mutate()}>
+            {togglePublish.isPending ? "Saving…" : community.isPublished ? "Unpublish community" : "Publish community"}
+          </Button>
+        </div>
+        {togglePublish.isError && (
+          <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <p>{togglePublish.error.message}</p>
+            {togglePublish.error instanceof ApiError && togglePublish.error.code === "creator_profile_required" && (
+              <p className="mt-2">Complete your creator profile first. <Link href="/onboarding" className="font-semibold underline">Go to creator onboarding</Link>.</p>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="mt-9" aria-labelledby="manage-tools-heading">

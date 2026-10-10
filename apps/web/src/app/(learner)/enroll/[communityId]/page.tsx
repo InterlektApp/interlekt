@@ -10,6 +10,7 @@ import { useMe } from "@/hooks/use-auth";
 import { useCommunity } from "@/hooks/use-communities";
 import { enrollErrorMessage, useEnrollFree } from "@/hooks/use-enrollments";
 import { ApiError } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
 import type { CommunityDetail } from "@/types/api";
 
 interface EnrollPageProps {
@@ -17,10 +18,9 @@ interface EnrollPageProps {
 }
 
 export default function EnrollPage({ params }: EnrollPageProps) {
-  // EnrollCard links /enroll/{slug}; older links may pass an id — the
-  // detail hook falls back to mocks for either.
+  // Enrollment links pass the community slug, which is also the detail API key.
   const { communityId: slug } = use(params);
-  const { data: community, isLoading } = useCommunity(slug);
+  const { data: community, isLoading, isError, error } = useCommunity(slug);
   const { data: me } = useMe();
 
   if (isLoading) {
@@ -30,6 +30,11 @@ export default function EnrollPage({ params }: EnrollPageProps) {
         <div className="mt-6 h-80 rounded-3xl border border-sky-100 bg-sky-50" />
       </main>
     );
+  }
+
+  if (isError) {
+    if (error instanceof ApiError && error.status === 404) notFound();
+    return <main className="mx-auto max-w-2xl px-4 py-8 sm:py-10"><div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">Community details could not be loaded. {apiErrorMessage(error)}</div><Link className="mt-4 inline-block text-sm font-semibold text-sky-800 underline" href="/communities">Back to Explore</Link></main>;
   }
 
   if (!community) notFound();

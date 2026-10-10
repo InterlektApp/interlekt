@@ -4,12 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { use } from "react";
 import { notFound } from "next/navigation";
-import { BookOpen, Users } from "lucide-react";
+import { BookOpen, Star, Users } from "lucide-react";
 import { EnrollCard } from "@/components/enroll-card";
 import { MoneyAmount } from "@/components/money-amount";
 import { VerificationBadge } from "@/components/verification-badge";
+import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { ApiError } from "@/lib/api/client";
 import { useMe } from "@/hooks/use-auth";
 import { useCommunity } from "@/hooks/use-communities";
 import { useMyEnrollments } from "@/hooks/use-enrollments";
@@ -20,7 +22,7 @@ interface CommunityDetailPageProps {
 
 export default function CommunityDetailPage({ params }: CommunityDetailPageProps) {
   const { slug } = use(params);
-  const { data: community, isLoading } = useCommunity(slug);
+  const { data: community, isLoading, isError, error, refetch } = useCommunity(slug);
   const { data: me } = useMe();
   const { data: enrollments = [] } = useMyEnrollments();
 
@@ -39,7 +41,31 @@ export default function CommunityDetailPage({ params }: CommunityDetailPageProps
     );
   }
 
+  if (isError && error instanceof ApiError && error.status === 404) notFound();
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-[#f7fbfd] text-[#102f45]">
+        <SiteHeader />
+        <main className="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
+          <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-950">
+            <h1 className="text-xl font-semibold">Community details are unavailable</h1>
+            <p className="mt-2 text-sm leading-6">We could not load this community from the backend. Please check your connection and try again.</p>
+            <Button type="button" onClick={() => void refetch()} className="mt-5">Retry</Button>
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
   if (!community) notFound();
+
+  // The backend detail contract includes the aggregate but does not expose
+  // individual reviews to anonymous visitors (its review-list route is auth-gated).
+  const ratingSummary = community as typeof community & { rating?: number | null; reviewCount?: number };
+  const rating = ratingSummary.rating ?? null;
+  const reviewCount = ratingSummary.reviewCount ?? 0;
 
   const enrollment =
     enrollments.find((e) => e.community.id === community.id && e.status === "active") ?? null;
@@ -87,6 +113,13 @@ export default function CommunityDetailPage({ params }: CommunityDetailPageProps
                     currency={community.priceCurrency}
                     isFree={community.isFree}
                   />
+                </span>
+                <span
+                  className="inline-flex items-center gap-1.5"
+                  aria-label={reviewCount > 0 && rating !== null ? `${rating.toFixed(1)} out of 5 from ${reviewCount} ${reviewCount === 1 ? "rating" : "ratings"}` : "No ratings yet"}
+                >
+                  <Star className="h-4 w-4 text-amber-500" aria-hidden="true" />
+                  {reviewCount > 0 && rating !== null ? `${rating.toFixed(1)} · ${reviewCount} ${reviewCount === 1 ? "rating" : "ratings"}` : "No ratings yet"}
                 </span>
                 {community.categories.map((c) => (
                   <Link
