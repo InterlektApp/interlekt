@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { BrandMark, BrandWordmark } from "@/components/brand";
 import { Icon } from "@/components/ui/icon";
 import { useMe } from "@/hooks/use-auth";
+import { useMyCommunities } from "@/hooks/use-communities";
 
 export interface StudioRailProps {
   active?: "home" | "new" | "transactions" | "settings" | "profile";
@@ -13,8 +14,10 @@ export interface StudioRailProps {
   className?: string;
 }
 
-export function StudioRail({ active, communities = [], className }: StudioRailProps) {
+export function StudioRail({ active, communities, className }: StudioRailProps) {
   const { data: me } = useMe();
+  const { data: ownedCommunities = [] } = useMyCommunities();
+  const communityLinks = communities ?? ownedCommunities;
 
   return (
     <aside className={cn("studio-rail", className)} aria-label="Creator studio">
@@ -45,10 +48,10 @@ export function StudioRail({ active, communities = [], className }: StudioRailPr
         </Link>
       </div>
 
-      {communities.length > 0 ? (
+      {communityLinks.length > 0 ? (
         <div className="studio-rail-section">
           <p className="studio-rail-label">Communities</p>
-          {communities.map((community) => (
+          {communityLinks.map((community) => (
             <Link
               key={community.id}
               className="rail-item"
@@ -64,13 +67,11 @@ export function StudioRail({ active, communities = [], className }: StudioRailPr
 
       <div className="studio-rail-section">
         <p className="studio-rail-label">Money</p>
-        <Link
-          className={cn("rail-item", active === "transactions" && "active")}
-          href="/studio/communities"
-        >
+        <div className="rail-item cursor-not-allowed opacity-60" aria-label="Transactions coming soon">
           <Icon name="receipt" />
           <span>Transactions</span>
-        </Link>
+          <span className="count">Soon</span>
+        </div>
       </div>
 
       <div className="studio-rail-section">

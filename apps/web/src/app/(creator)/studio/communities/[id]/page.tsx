@@ -19,7 +19,7 @@ interface ManagePageProps {
 export default function ManageCommunityPage({ params }: ManagePageProps) {
   const { id } = use(params);
   // Matches by id or slug — manage links use the list item's id.
-  const { data: mine = [], isLoading } = useMyCommunities();
+  const { data: mine = [], isLoading, isError, error, refetch } = useMyCommunities();
   const community = mine.find((c) => c.id === id || c.slug === id);
   const queryClient = useQueryClient();
   const togglePublish = useMutation({
@@ -31,7 +31,7 @@ export default function ManageCommunityPage({ params }: ManagePageProps) {
     },
   });
 
-  if (isLoading) {
+  if (isLoading && !community) {
     return (
       <main aria-busy="true" aria-label="Loading community" className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="h-7 w-36 animate-pulse rounded-lg bg-sky-100" />
@@ -40,6 +40,23 @@ export default function ManageCommunityPage({ params }: ManagePageProps) {
           <div className="h-28 animate-pulse rounded-2xl bg-sky-50" />
           <div className="h-28 animate-pulse rounded-2xl bg-sky-50" />
         </div>
+      </main>
+    );
+  }
+
+  if (isError && !community) {
+    return (
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        <section role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+          <h1 className="text-xl font-semibold text-slate-950">Studio couldn’t reload this community</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            {error instanceof Error ? error.message : "The creator community list is temporarily unavailable."}
+            {" "}Try again in a moment. This error doesn&apos;t confirm that the community was deleted.
+          </p>
+          <Button type="button" variant="outline" className="mt-4" onClick={() => void refetch()}>
+            Retry loading community
+          </Button>
+        </section>
       </main>
     );
   }
@@ -61,6 +78,15 @@ export default function ManageCommunityPage({ params }: ManagePageProps) {
           Studio
         </Link>
       </Button>
+
+      {isError ? (
+        <div role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+          Showing the saved community details. Studio couldn&apos;t refresh the full list just now.
+          <button type="button" className="ml-2 font-semibold underline" onClick={() => void refetch()}>
+            Retry
+          </button>
+        </div>
+      ) : null}
 
       <section className="mt-4 rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-50/90 via-white to-cyan-50/50 p-6 shadow-[0_18px_52px_-42px_rgba(8,47,73,.45)] sm:p-9">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">

@@ -1,12 +1,59 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, Plus, Wallet } from "lucide-react";
+import { ArrowUpRight, BookOpen, Plus, Users, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/stat-card";
-import { CommunityCard } from "@/components/community-card";
+import { CommunityCover } from "@/components/ui/community-cover";
+import { MoneyAmount } from "@/components/money-amount";
 import { useMyCreatorProfile } from "@/hooks/use-creator-onboarding";
 import { useMyCommunities } from "@/hooks/use-communities";
+import type { CommunityListItem } from "@/types/api";
+
+function CreatorCommunityCard({ community }: { community: CommunityListItem }) {
+  return (
+    <Link
+      href={`/studio/communities/${community.id}`}
+      className="group overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-sm transition-colors hover:border-sky-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 focus-visible:ring-offset-2"
+      aria-label={`Manage ${community.title}`}
+    >
+      <div className="relative h-40 overflow-hidden bg-slate-950">
+        <CommunityCover
+          src={community.imageUrl}
+          title={community.title}
+          category={community.categories[0]?.name}
+        />
+        <span className={`absolute right-3 top-3 rounded-full border px-2.5 py-1 text-xs font-semibold ${community.isPublished ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-950"}`}>
+          {community.isPublished ? "Published" : "Draft"}
+        </span>
+      </div>
+      <div className="p-5">
+        <p className="label-eyebrow truncate">{community.categories[0]?.name ?? "Your community"}</p>
+        <h3 className="mt-1 line-clamp-2 min-h-12 text-lg font-semibold tracking-tight text-slate-950">
+          {community.title}
+        </h3>
+        <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-slate-600">
+          {community.excerpt}
+        </p>
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-sky-100 pt-4 text-sm">
+          <span className="inline-flex items-center gap-1.5 text-slate-600">
+            <Users aria-hidden="true" className="h-4 w-4 text-sky-800" />
+            {community.memberCount.toLocaleString()} members
+          </span>
+          <MoneyAmount
+            priceAmount={community.priceAmount}
+            currency={community.priceCurrency}
+            isFree={community.isFree}
+          />
+        </div>
+        <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-sky-900">
+          Manage community
+          <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+        </span>
+      </div>
+    </Link>
+  );
+}
 
 export default function StudioPage() {
   const profile = useMyCreatorProfile();
@@ -145,11 +192,9 @@ export default function StudioPage() {
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {mine.map((c) => (
-              <div key={c.id} className="relative">
-                <CommunityCard community={c} />
-              </div>
-            ))}
+          {mine.map((community) => (
+            <CreatorCommunityCard key={community.id} community={community} />
+          ))}
           </div>
         )}
       </section>

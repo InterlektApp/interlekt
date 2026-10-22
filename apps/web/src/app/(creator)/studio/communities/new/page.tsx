@@ -8,7 +8,8 @@ import { ArrowLeft, BookOpen, ImagePlus, LoaderCircle, Plus, Tag, Wallet } from 
 import { Button } from "@/components/ui/button";
 import { useCategories } from "@/hooks/use-communities";
 import { ApiError, post } from "@/lib/api/client";
-import type { CommunityCreateRequest, CommunityDetail } from "@/types/api";
+import { qk } from "@/lib/query-keys";
+import type { CommunityCreateRequest, CommunityDetail, CommunityListItem } from "@/types/api";
 
 type UploadImageResponse = { url: string; publicId: string; resourceType: string };
 type CommunityFormMutation = Omit<CommunityCreateRequest, "imageUrl"> & {
@@ -41,7 +42,15 @@ export default function NewCommunityPage() {
       return post<CommunityDetail>("/communities", { ...body, imageUrl: uploadedImageUrl });
     },
     onSuccess: async (community) => {
-      await queryClient.invalidateQueries({ queryKey: ["communities"] });
+      const listItem: CommunityListItem = {
+        ...community,
+        excerpt: community.description.slice(0, 180),
+      };
+      queryClient.setQueryData<CommunityListItem[]>(qk.communities.mine(), (current = []) => [
+        listItem,
+        ...current.filter((item) => item.id !== community.id),
+      ]);
+      await queryClient.invalidateQueries({ queryKey: ["communities", "list"] });
       router.push(`/studio/communities/${community.id}`);
     },
   });
