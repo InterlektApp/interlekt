@@ -39,10 +39,10 @@ export default function EnrollPage({ params }: EnrollPageProps) {
 
   if (!community) notFound();
 
-  return <EnrollFlow community={community} signedIn={!!me} />;
+  return <EnrollFlow community={community} signedIn={!!me} isCreator={me?.roles.includes("creator") ?? false} />;
 }
 
-function EnrollFlow({ community, signedIn }: { community: CommunityDetail; signedIn: boolean }) {
+function EnrollFlow({ community, signedIn, isCreator }: { community: CommunityDetail; signedIn: boolean; isCreator: boolean }) {
   const enroll = useEnrollFree();
   const error = enroll.error;
   const paidBlocked = error instanceof ApiError && error.code === "payment_required";
@@ -76,6 +76,18 @@ function EnrollFlow({ community, signedIn }: { community: CommunityDetail; signe
               <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-200 bg-white text-emerald-700"><CheckCircle2 className="h-8 w-8" aria-hidden="true" /></span>
               <p className="mt-4 text-lg font-semibold text-slate-950">You&apos;re in! Welcome aboard.</p>
               <Button className="mt-5" asChild><Link href={`/communities/${community.slug}/classroom`}>Go to classroom now</Link></Button>
+            </div>
+          ) : isCreator ? (
+            <div className="flex flex-col items-center rounded-2xl bg-sky-50/70 px-5 py-8 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-200 bg-white text-sky-800"><UsersRound className="h-6 w-6" aria-hidden="true" /></span>
+              <p className="mt-3 font-semibold text-slate-950">Creator accounts can&apos;t enroll</p>
+              <p className="mt-1 max-w-sm text-sm leading-6 text-slate-600">
+                You can browse communities with this account. Joining a classroom requires an account registered as a learner.
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-3">
+                <Button variant="outline" asChild><Link href={`/communities/${community.slug}`}>Back to community</Link></Button>
+                <Button asChild><Link href="/studio">Go to Creator Studio</Link></Button>
+              </div>
             </div>
           ) : paidBlocked ? (
             <div className="flex flex-col items-center rounded-2xl bg-slate-900 text-white p-6 sm:p-8 text-center border border-slate-800">

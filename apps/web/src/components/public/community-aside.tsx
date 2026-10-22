@@ -21,6 +21,8 @@ export interface CommunityAsideProps {
   community: CommunityDetail;
   enrollment: EnrollmentResponse | null;
   isOwner: boolean;
+  /** Creator accounts manage communities; enrollment is learner-only. */
+  isCreator?: boolean;
   /** `GET /creators/{user_id}` — used for the published community count. */
   creator?: CreatorProfileResponse;
   /** Where the primary call to action points. */
@@ -31,6 +33,7 @@ export function CommunityAside({
   community,
   enrollment,
   isOwner,
+  isCreator = false,
   creator,
   enrollHref,
 }: CommunityAsideProps) {
@@ -67,6 +70,10 @@ export function CommunityAside({
           <Link className="btn btn-primary btn-block" href={`/studio/communities/${community.id}`}>
             Manage community
           </Link>
+        ) : isCreator ? (
+          <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm leading-6 text-sky-950" role="status">
+            Creator accounts can browse communities, but can&apos;t enroll as learners. Use a learner account to join.
+          </div>
         ) : isEnrolled ? (
           <>
             <Link className="btn btn-primary btn-block" href={`/communities/${community.slug}/classroom`}>

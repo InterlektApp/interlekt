@@ -35,7 +35,7 @@ export function PublicShell({ active, children }: PublicShellProps) {
         }
       />
       <main className="page-body">{children}</main>
-      <SiteFooter />
+      <SiteFooter signedIn={Boolean(me)} isCreator={me?.roles.includes("creator") ?? false} />
     </div>
   );
 }

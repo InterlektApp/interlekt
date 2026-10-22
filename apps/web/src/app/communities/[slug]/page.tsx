@@ -44,7 +44,8 @@ export default function CommunityDetailPage({ params }: CommunityDetailPageProps
 
   const { data: community, isLoading, isError, error, refetch } = useCommunity(slug);
   const { data: me } = useMe();
-  const { data: enrollments = [] } = useMyEnrollments();
+  const isCreator = me?.roles.includes("creator") ?? false;
+  const { data: enrollments = [] } = useMyEnrollments(Boolean(me && !isCreator));
 
   const creatorUserId = community?.creator.userId ?? "";
   const { data: creator } = useCreator(creatorUserId);
@@ -274,6 +275,7 @@ export default function CommunityDetailPage({ params }: CommunityDetailPageProps
               community={community}
               enrollment={enrollment}
               isOwner={isOwner}
+              isCreator={isCreator}
               creator={creator}
               enrollHref={enrollHref}
             />

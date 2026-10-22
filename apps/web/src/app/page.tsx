@@ -8,6 +8,7 @@ import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Icon } from "@/components/ui/icon";
 import { Reveal } from "@/components/ui/motion";
 import { AmbientIcons } from "@/components/shell/ambient-icons";
+import { useMe } from "@/hooks/use-auth";
 import { useCategories, useCommunities } from "@/hooks/use-communities";
 
 /**
@@ -50,6 +51,11 @@ const CREATOR_POINTS = [
 ];
 
 export default function LandingPage() {
+  const { data: me } = useMe();
+  const isSignedIn = Boolean(me);
+  const isCreator = me?.roles.includes("creator") ?? false;
+  const accountHomeHref = isCreator ? "/studio" : "/dashboard";
+  const accountHomeLabel = isCreator ? "Open Creator Studio" : "Go to dashboard";
   const {
     data: communityData,
     isLoading: communitiesLoading,
@@ -84,8 +90,8 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-wrap justify-center" style={{ gap: 12 }}>
-            <Link className="btn btn-primary btn-pill btn-lg" href="/auth/register">
-              Get started — free
+            <Link className="btn btn-primary btn-pill btn-lg" href={isSignedIn ? accountHomeHref : "/auth/register"}>
+              {isSignedIn ? accountHomeLabel : "Get started — free"}
               <Icon name="arrowRight" size={18} />
             </Link>
             <Link className="btn btn-secondary btn-pill btn-lg" href="/communities">
@@ -274,13 +280,20 @@ export default function LandingPage() {
               and a price in naira that learners can see before they join.
             </p>
             <div className="flex flex-wrap justify-center" style={{ gap: 12 }}>
-              <Link
-                className="btn btn-lg btn-pill bg-warning text-ink hover:opacity-90"
-                href="/auth/register"
-              >
-                Become a creator
-                <Icon name="arrowRight" size={18} />
-              </Link>
+              {!isSignedIn ? (
+                <Link
+                  className="btn btn-lg btn-pill bg-warning text-ink hover:opacity-90"
+                  href="/auth/register"
+                >
+                  Become a creator
+                  <Icon name="arrowRight" size={18} />
+                </Link>
+              ) : isCreator ? (
+                <Link className="btn btn-lg btn-pill bg-warning text-ink hover:opacity-90" href="/studio">
+                  Open Creator Studio
+                  <Icon name="arrowRight" size={18} />
+                </Link>
+              ) : null}
               <Link className="btn btn-inverse btn-pill btn-lg" href="/communities">
                 See live communities
               </Link>
@@ -359,12 +372,15 @@ export default function LandingPage() {
             Start learning from people who&apos;ve done it.
           </h2>
           <p className="text-lead" style={{ color: "var(--ink-3)", marginBottom: 40 }}>
-            Create an account to join communities, work through lessons and keep your progress on your
-            own dashboard.
+            {isSignedIn
+              ? isCreator
+                ? "Manage your communities and courses, or explore what other creators are teaching."
+                : "Continue learning, check your progress, or find another community to join."
+              : "Create an account to join communities, work through lessons and keep your progress on your own dashboard."}
           </p>
           <div className="flex flex-wrap justify-center" style={{ gap: 12 }}>
-            <Link className="btn btn-primary btn-pill btn-lg" href="/auth/register">
-              Get started — free
+            <Link className="btn btn-primary btn-pill btn-lg" href={isSignedIn ? accountHomeHref : "/auth/register"}>
+              {isSignedIn ? accountHomeLabel : "Get started — free"}
               <Icon name="arrowRight" size={18} />
             </Link>
             <Link className="btn btn-secondary btn-pill btn-lg" href="/communities">

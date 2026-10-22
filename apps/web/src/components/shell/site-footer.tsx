@@ -32,7 +32,28 @@ const COLUMNS = [
   },
 ];
 
-export function SiteFooter() {
+export function SiteFooter({ signedIn = false, isCreator = false }: { signedIn?: boolean; isCreator?: boolean }) {
+  const columns = COLUMNS.map((column) => {
+    if (column.label === "Learn" && signedIn) {
+      return { ...column, links: column.links.filter((link) => link.label !== "For creators") };
+    }
+    if (column.label !== "Account" || !signedIn) return column;
+    return {
+      ...column,
+      links: isCreator
+        ? [
+            { label: "Creator Studio", href: "/studio" },
+            { label: "Edit creator profile", href: "/onboarding" },
+          ]
+        : [
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "My learning", href: "/my-communities" },
+            { label: "Profile", href: "/profile" },
+            { label: "Settings", href: "/settings" },
+          ],
+    };
+  });
+
   return (
     <footer className="site-footer">
       <div className="footer-grid">
@@ -46,7 +67,7 @@ export function SiteFooter() {
             room, for a price in naira.
           </p>
         </div>
-        {COLUMNS.map((column) => (
+        {columns.map((column) => (
           <div key={column.label}>
             <div className="mb-3 text-13 font-medium text-white/50">{column.label}</div>
             <ul className="flex flex-col gap-2.5 text-14">

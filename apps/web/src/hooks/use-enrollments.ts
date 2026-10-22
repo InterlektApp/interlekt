@@ -10,7 +10,7 @@ import type {
 } from "@/types/api";
 
 /** GET /enrollments/mine — empty when signed out or unreachable. */
-export function useMyEnrollments() {
+export function useMyEnrollments(enabled = true) {
   return useQuery({
     queryKey: qk.enrollments.mine(),
     queryFn: async (): Promise<EnrollmentResponse[]> => {
@@ -21,6 +21,7 @@ export function useMyEnrollments() {
         return [];
       }
     },
+    enabled,
   });
 }
 

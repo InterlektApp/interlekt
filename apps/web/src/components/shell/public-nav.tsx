@@ -22,8 +22,21 @@ const LINKS = [
 ] as const;
 
 export function PublicNav({ active, signedIn, isCreator, user }: PublicNavProps) {
-  const links = isCreator
-    ? LINKS.map((link) => (link.id === "creators" ? { ...link, label: "Studio", href: "/studio" } : link))
+  const links = signedIn
+    ? isCreator
+      ? [
+          { id: "studio", label: "Studio", href: "/studio" },
+          { id: "explore", label: "Explore", href: "/communities" },
+          { id: "about", label: "About", href: "/about" },
+          { id: "help", label: "Help", href: "/help" },
+        ]
+      : [
+          { id: "dashboard", label: "Dashboard", href: "/dashboard" },
+          { id: "explore", label: "Explore", href: "/communities" },
+          { id: "learning", label: "My learning", href: "/my-communities" },
+          { id: "about", label: "About", href: "/about" },
+          { id: "help", label: "Help", href: "/help" },
+        ]
     : LINKS;
 
   return (
