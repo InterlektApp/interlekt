@@ -656,7 +656,7 @@
   /* ----------------------------------------------------------------------------
      14. STUDIO RAIL (Creator) — Apple-style sidebar, hairline
      -------------------------------------------------------------------------- */
-  .studio-shell { display: grid; grid-template-columns: var(--rail-w) 1fr; min-height: 100vh; }
+  .studio-shell { display: grid; grid-template-columns: minmax(220px, var(--rail-w)) minmax(0, 1fr); min-height: 100vh; }
   .studio-rail {
     display: flex;
     flex-direction: column;
@@ -672,7 +672,7 @@
   .studio-rail-footer { margin-top: auto; padding: var(--sp-4) var(--sp-4) 0; border-top: 1px solid var(--line); }
   .studio-rail-footer .rail-item { color: var(--ink-2); }
   .studio-rail-footer .rail-item:hover { background: var(--paper-2); color: var(--ink); }
-  .studio-mobile-bar { display: none; }
+  .studio-mobile-bar, .studio-mobile-overlay { display: none; }
   .studio-rail-label {
     font-size: var(--fs-12);
     font-weight: 500;
@@ -1120,7 +1120,7 @@
       background: var(--paper);
       cursor: pointer;
     }
-    .studio-mobile-overlay { position: fixed; inset: 0; z-index: 50; }
+    .studio-mobile-overlay { position: fixed; inset: 0; z-index: 50; display: block; }
     .studio-mobile-backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgba(15, 23, 42, .38); }
     .studio-mobile-drawer {
       position: absolute;
@@ -1131,7 +1131,7 @@
       height: 100vh;
       height: 100dvh;
       overflow-y: auto;
-      padding: var(--sp-5) 0;
+      padding: max(var(--sp-5), env(safe-area-inset-top)) 0 max(var(--sp-5), env(safe-area-inset-bottom));
       background: var(--paper);
       box-shadow: 0 12px 40px rgba(15, 23, 42, .18);
     }

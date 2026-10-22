@@ -124,7 +124,7 @@ export default function StudioPage() {
         </Button>
       </section>
 
-      <section aria-label="Studio overview" className="mt-6 grid gap-4 sm:grid-cols-3">
+      <section aria-label="Studio overview" className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           label="Total members"
           value={communitiesError ? "—" : totalMembers.toLocaleString()}
@@ -159,7 +159,7 @@ export default function StudioPage() {
         </div>
 
         {isLoading ? (
-          <div aria-busy="true" aria-label="Loading your communities" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div aria-busy="true" aria-label="Loading your communities" className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 3 }, (_, i) => (
               <div key={i} className="h-64 animate-pulse rounded-2xl border border-sky-100 bg-sky-50/70" />
             ))}
@@ -191,7 +191,7 @@ export default function StudioPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {mine.map((community) => (
             <CreatorCommunityCard key={community.id} community={community} />
           ))}
