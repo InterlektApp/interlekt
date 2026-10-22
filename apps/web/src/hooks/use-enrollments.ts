@@ -41,7 +41,7 @@ export function useEnrollFree() {
 export function enrollErrorMessage(err: unknown): string {
   if (err instanceof ApiError) {
     if (err.code === "payment_required") {
-      return "This is a paid community. Online payment opens with the backend payments release — the creator has been notified of your interest.";
+      return "Enrollments for this cohort will open shortly. You will be notified when spots become available.";
     }
     if (err.code === "already_enrolled") return "You're already enrolled in this community.";
     if (err.code === "own_community") return "You can't enroll in your own community.";

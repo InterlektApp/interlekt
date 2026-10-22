@@ -1,98 +1,216 @@
 "use client";
 
-import { use, useState, type FormEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Megaphone, Pin, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { use } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Alert, EmptyState } from "@/components/ui/feedback";
+import { Tabs } from "@/components/ui/interactive";
+import { Icon } from "@/components/ui/icon";
+import { FeedComposer } from "@/components/learner/feed-composer";
+import { FeedPost } from "@/components/learner/feed-post";
+import { useCommunityPosts } from "@/hooks/use-learner-data";
 import { useCommunity } from "@/hooks/use-communities";
-import { get, post } from "@/lib/api/client";
+import { useMe } from "@/hooks/use-auth";
+import { post } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
-import type { Paginated } from "@/types/api";
+import { qk } from "@/lib/query-keys";
+import type { PostResponse } from "@/types/api";
 
-type PostItem = {
-  id: string;
-  communityId: string;
-  authorId: string;
-  author: { displayName: string; avatarUrl: string | null };
-  content: string;
-  isPinned: boolean;
-  isAnnouncement: boolean;
-  commentCount: number;
-  createdAt: string;
-};
+/**
+ * B5 — the community feed.
+ *
+ * `GET /communities/{slug}/posts` is 403 for learners who have not joined, so
+ * the page shows a "join to participate" state instead of an empty feed.
+ * The API supports posts, announcements, pinning and comments — there is no
+ * like entity, Q&A flag, rules list, contributor ranking or online count, so
+ * those blocks from the design are omitted.
+ */
 
-type FeedPageProps = { params: Promise<{ slug: string }> };
-
-function timeAgo(iso: string): string {
-  const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+interface FeedPageProps {
+  params: Promise<{ slug: string }>;
 }
 
-export default function FeedPage({ params }: FeedPageProps) {
+type FeedTab = "feed" | "announcements";
+
+export default function CommunityFeedPage({ params }: FeedPageProps) {
   const { slug } = use(params);
   const queryClient = useQueryClient();
   const { data: community } = useCommunity(slug);
-  const [content, setContent] = useState("");
-  const feedKey = ["community-feed", slug];
-  const { data, isLoading, isError, error: feedError } = useQuery({
-    queryKey: feedKey,
-    queryFn: () => get<Paginated<PostItem>>(`/communities/${encodeURIComponent(slug)}/posts?page=1&pageSize=50`),
-  });
+  const { data: me } = useMe();
+  const feed = useCommunityPosts(slug);
+  const [tab, setTab] = useState<FeedTab>("feed");
+  const [draft, setDraft] = useState("");
+
   const createPost = useMutation({
-    mutationFn: (body: { content: string }) => post<PostItem>(`/communities/${encodeURIComponent(slug)}/posts`, body),
+    mutationFn: (content: string) =>
+      post<PostResponse>(`/communities/${encodeURIComponent(slug)}/posts`, { content }),
     onSuccess: async () => {
-      setContent("");
-      await queryClient.invalidateQueries({ queryKey: feedKey });
+      setDraft("");
+      await queryClient.invalidateQueries({ queryKey: qk.communities.posts(slug) });
     },
   });
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const trimmed = content.trim();
-    if (trimmed) createPost.mutate({ content: trimmed });
-  }
+  const posts = feed.data?.posts ?? [];
+  const announcements = posts.filter((item) => item.isAnnouncement);
+  const visible = tab === "announcements" ? announcements : posts;
+
+  const tabs = [
+    { id: "feed", label: "Feed", count: posts.length },
+    { id: "announcements", label: "Announcements", count: announcements.length },
+  ];
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-7 sm:py-10">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-sky-200 pb-5">
-        <div>
-          <p className="label-eyebrow text-sky-800">Community</p>
-          <h1 className="mt-2 font-display text-3xl tracking-tight text-slate-950">{community?.title ?? "Community feed"}</h1>
-          <p className="mt-1 text-sm text-slate-600">Updates and conversations from this community.</p>
-        </div>
-        <Button variant="outline" size="sm" asChild><Link href={`/communities/${slug}`}>Community page <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link></Button>
-      </header>
+    <div className="container" style={{ paddingTop: 32, paddingBottom: 96 }}>
+      {/* ============== BREADCRUMB ============== */}
+      <nav className="breadcrumb" style={{ marginBottom: 24 }} aria-label="Breadcrumb">
+        <Link href="/my-communities">My communities</Link>
+        <span className="sep">/</span>
+        <Link href={`/communities/${encodeURIComponent(slug)}`}>{community?.title ?? slug}</Link>
+        <span className="sep">/</span>
+        <span className="current">Feed</span>
+      </nav>
 
-      <div className="mx-auto max-w-3xl">
-        <form onSubmit={submit} className="rounded-2xl border border-sky-200 bg-sky-50/60 p-4 shadow-sm sm:p-5">
-          <label htmlFor="new-post" className="mb-2 block text-sm font-semibold text-slate-900">Start a conversation</label>
-          <textarea id="new-post" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Share something with the community…" rows={3} maxLength={5000} className="w-full resize-y rounded-xl border border-sky-200 bg-white p-3.5 text-sm leading-6 text-slate-950 outline-none placeholder:text-slate-400 focus:border-cyan-600 focus:ring-2 focus:ring-cyan-100" />
-          {createPost.isError && <p role="alert" className="mt-3 text-sm text-red-700">{createPost.error.message}</p>}
-          <div className="mt-3 flex justify-end"><Button type="submit" disabled={!content.trim() || createPost.isPending}>{createPost.isPending ? "Posting…" : <><Send className="h-4 w-4" aria-hidden="true" />Post</>}</Button></div>
-        </form>
-
-        <section aria-label="Community posts" className="mt-5 space-y-4">
-          {isLoading ? <div className="h-40 animate-pulse rounded-2xl border border-sky-100 bg-sky-50" />
-            : isError ? <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">The feed could not be loaded. {apiErrorMessage(feedError)} Sign in to an enrolled account and try again.</div>
-            : !data?.items.length ? <div className="rounded-2xl border border-dashed border-sky-200 bg-white p-10 text-center"><p className="font-semibold text-slate-900">No posts yet</p><p className="mt-2 text-sm text-slate-600">Start the first conversation in this community.</p></div>
-            : data.items.map((item) => <article key={item.id} className="overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-sm">
-              {item.isAnnouncement && <div className="border-b border-cyan-100 bg-cyan-50 px-5 py-2.5"><p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-cyan-900"><Megaphone className="h-3.5 w-3.5" aria-hidden="true" />Announcement</p></div>}
-              <div className="p-5 sm:p-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-sky-800 text-sm font-bold text-white ring-2 ring-sky-100" aria-hidden="true">{item.author.displayName.charAt(0)}</div>
-                  <div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-950">{item.author.displayName}</p><p className="mt-0.5 text-xs text-slate-500">{timeAgo(item.createdAt)}</p></div>
-                  {item.isPinned && <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800"><Pin className="h-3.5 w-3.5" aria-hidden="true" />Pinned</span>}
-                </div>
-                <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{item.content}</p>
-                <p className="mt-5 border-t border-sky-100 pt-3 text-xs text-slate-500">{item.commentCount} comments</p>
-              </div>
-            </article>)}
-        </section>
+      {/* ============== PAGE HEADER ============== */}
+      <div style={{ marginBottom: 32 }}>
+        <h1 className="h2" style={{ marginBottom: 6 }}>
+          Community feed
+        </h1>
+        <p className="text-sm muted" style={{ margin: 0 }}>
+          Posts, questions and announcements from {community?.title ?? slug}
+          {community ? ` · ${community.memberCount.toLocaleString()} members` : ""}
+        </p>
       </div>
-    </main>
+
+      <div
+        className="grid items-start"
+        style={{ gridTemplateColumns: "minmax(0, 1.6fr) 320px", gap: 48 }}
+      >
+        {/* ====== MAIN ====== */}
+        <div style={{ minWidth: 0 }}>
+          <div style={{ marginBottom: 24 }}>
+            <Tabs tabs={tabs} value={tab} onChange={(id) => setTab(id as FeedTab)} animated />
+          </div>
+
+          {feed.isLoading ? (
+            <div className="flex flex-col" style={{ gap: 16 }} aria-label="Loading the feed">
+              {[0, 1, 2].map((index) => (
+                <div key={index} className="skeleton" style={{ height: 160 }} />
+              ))}
+            </div>
+          ) : feed.data?.gated ? (
+            <EmptyState
+              icon="message"
+              title="Join this community to see the feed"
+              description="Posts, questions and announcements from the creator and other members are only visible to members."
+              action={{ label: "Join the community", href: `/enroll/${encodeURIComponent(slug)}` }}
+            />
+          ) : feed.isError ? (
+            <Alert variant="danger" icon="alertCircle" title="The feed could not be loaded">
+              <p style={{ marginBottom: 12 }}>{apiErrorMessage(feed.error)}</p>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => void feed.refetch()}>
+                Try again
+              </button>
+            </Alert>
+          ) : (
+            <>
+              <div style={{ marginBottom: 24 }}>
+                <FeedComposer
+                  value={draft}
+                  onChange={setDraft}
+                  onSubmit={() => {
+                    const content = draft.trim();
+                    if (content) createPost.mutate(content);
+                  }}
+                  author={me ? { name: me.displayName, avatarUrl: me.avatarUrl } : undefined}
+                  error={createPost.isError ? apiErrorMessage(createPost.error) : null}
+                />
+              </div>
+
+              {visible.length === 0 ? (
+                <EmptyState
+                  icon="message"
+                  title={tab === "announcements" ? "No announcements yet" : "No posts yet"}
+                  description={
+                    tab === "announcements"
+                      ? "Announcements from the creator will show up here."
+                      : "Start the first conversation in this community."
+                  }
+                />
+              ) : (
+                <div className="flex flex-col" style={{ gap: 16 }}>
+                  {visible.map((item) => (
+                    <FeedPost
+                      key={item.id}
+                      post={item}
+                      onPosted={() => void feed.refetch()}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ====== RIGHT RAIL ====== */}
+        <aside
+          className="flex flex-col"
+          style={{ gap: 24, minWidth: 0, position: "sticky", top: 80 }}
+        >
+          <div className="card card-sm">
+            {community?.imageUrl ? (
+              <div
+                style={{
+                  width: "100%",
+                  aspectRatio: "16 / 9",
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  marginBottom: 16,
+                  background: "var(--paper-2)",
+                }}
+              >
+                <img
+                  src={community.imageUrl}
+                  alt=""
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
+            ) : null}
+            <h3 className="h6" style={{ marginBottom: 8 }}>
+              {community?.title ?? "Community"}
+            </h3>
+            {community ? (
+              <p className="text-xs muted tnum" style={{ marginBottom: 12 }}>
+                {community.memberCount.toLocaleString()} members
+              </p>
+            ) : null}
+            <div className="flex" style={{ gap: 8 }}>
+              <Link
+                href={`/communities/${encodeURIComponent(slug)}/classroom`}
+                className="btn btn-secondary btn-sm btn-block"
+              >
+                Classroom
+              </Link>
+              <span
+                className="btn btn-secondary btn-sm"
+                title="You are a member of this community"
+                aria-label="You are a member of this community"
+              >
+                <Icon name="check" size={14} />
+              </span>
+            </div>
+          </div>
+
+          <div className="card card-sm">
+            <h3 className="h6" style={{ marginBottom: 8 }}>
+              Joined
+            </h3>
+            <p className="text-sm muted" style={{ margin: 0 }}>
+              You&apos;re a member of this community, so you can post and reply here.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
   );
 }

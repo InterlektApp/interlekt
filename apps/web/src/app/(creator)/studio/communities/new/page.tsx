@@ -56,11 +56,11 @@ export default function NewCommunityPage() {
     event.preventDefault();
     setSubmitNotice("");
     if (noCategories) {
-      setSubmitNotice("This backend has no categories yet. Ask its admin to seed categories, then select at least one here.");
+      setSubmitNotice("Categories are currently loading. Please try again in a moment.");
       return;
     }
     if (categoryIds.length === 0) {
-      setSubmitNotice("Select at least one backend category before creating the community.");
+      setSubmitNotice("Please select at least one category before creating your community.");
       return;
     }
     createCommunity.mutate({
@@ -152,11 +152,11 @@ export default function NewCommunityPage() {
         <aside className="h-fit rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-cyan-50/70 p-5 sm:p-7">
           <p className="label-eyebrow inline-flex items-center gap-2"><Tag className="h-4 w-4" /> Categories</p>
           <h2 className="mt-2 text-lg font-semibold text-slate-950">Choose up to five</h2>
-          {categoriesLoading ? <p className="mt-4 text-sm text-slate-600">Loading backend categories…</p>
-            : categoriesError ? <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">Could not load categories from the backend.</p>
-            : noCategories ? <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-950">The backend currently has no categories seeded. A backend admin must seed real categories before a community can be created. No demo categories are being used.</p>
+          {categoriesLoading ? <p className="mt-4 text-sm text-slate-600">Loading categories…</p>
+            : categoriesError ? <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">Could not load categories. Please check your connection.</p>
+            : noCategories ? <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-950">No categories found. Please refresh the page.</p>
             : <div className="mt-4 space-y-2">{categories.map((category) => <label key={category.id} className="flex cursor-pointer items-center gap-3 rounded-xl border border-sky-100 bg-white p-3 text-sm text-slate-800"><input type="checkbox" checked={categoryIds.includes(category.id)} onChange={() => toggleCategory(category.id)} disabled={!categoryIds.includes(category.id) && categoryIds.length >= 5} className="h-4 w-4 accent-sky-800" />{category.name}</label>)}</div>}
-          {!noCategories && !categoriesError && <p className="mt-4 text-xs text-slate-500">{categoryIds.length}/5 selected. Categories are loaded live from the backend.</p>}
+          {!noCategories && !categoriesError && <p className="mt-4 text-xs text-slate-500">{categoryIds.length}/5 selected</p>}
         </aside>
       </form>
     </main>

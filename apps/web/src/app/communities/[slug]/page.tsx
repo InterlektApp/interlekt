@@ -1,20 +1,38 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
 import { notFound } from "next/navigation";
-import { BookOpen, Star, Users } from "lucide-react";
-import { EnrollCard } from "@/components/enroll-card";
-import { MoneyAmount } from "@/components/money-amount";
-import { VerificationBadge } from "@/components/verification-badge";
-import { Button } from "@/components/ui/button";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { PublicShell } from "@/components/public/public-shell";
+import { CommunityAside } from "@/components/public/community-aside";
+import {
+  CommunityCurriculum,
+  CommunityFeed,
+  CommunityMembers,
+  CommunityReviews,
+} from "@/components/public/community-sections";
+import { VerifiedMark } from "@/components/public/verified-mark";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge, Stars } from "@/components/ui/feedback";
+import { Tabs } from "@/components/ui/interactive";
+import { Icon } from "@/components/ui/icon";
+import { CommunityCover } from "@/components/ui/community-cover";
 import { ApiError } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
 import { useMe } from "@/hooks/use-auth";
 import { useCommunity } from "@/hooks/use-communities";
 import { useMyEnrollments } from "@/hooks/use-enrollments";
+import { useCreator } from "@/hooks/use-users";
+
+/**
+ * A3 — the community detail page. The trust page of the funnel.
+ *
+ * Renders exactly what `GET /communities/{slug}` returns. The curriculum,
+ * reviews, members and feed tabs are enrolled-only on the backend, so each
+ * one shows a gated state for visitors who can't open it yet.
+ */
+
+type TabId = "overview" | "curriculum" | "reviews" | "members" | "feed";
 
 interface CommunityDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -22,180 +40,246 @@ interface CommunityDetailPageProps {
 
 export default function CommunityDetailPage({ params }: CommunityDetailPageProps) {
   const { slug } = use(params);
+  const [tab, setTab] = useState<TabId>("overview");
+
   const { data: community, isLoading, isError, error, refetch } = useCommunity(slug);
   const { data: me } = useMe();
   const { data: enrollments = [] } = useMyEnrollments();
 
+  const creatorUserId = community?.creator.userId ?? "";
+  const { data: creator } = useCreator(creatorUserId);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f7fbfd]">
-        <SiteHeader />
-        <main className="mx-auto max-w-6xl animate-pulse px-5 py-8 md:px-8 md:py-12">
-          <div className="h-56 rounded-[28px] border border-sky-100 bg-sky-100/70 md:h-80" />
-          <div className="mt-8 h-8 w-2/3 rounded bg-sky-100" />
-          <div className="mt-3 h-4 w-1/3 rounded bg-sky-100" />
-          <div className="mt-8 h-48 rounded-2xl bg-white" />
-        </main>
-        <SiteFooter />
-      </div>
+      <PublicShell active="explore">
+        <div className="container" style={{ paddingTop: 32, paddingBottom: 96 }}>
+          <div className="skeleton" style={{ height: 40, width: 220, marginBottom: 24 }} />
+          <div className="skeleton" style={{ height: 320, marginBottom: 32 }} />
+          <div className="skeleton" style={{ height: 48, width: "60%", marginBottom: 16 }} />
+          <div className="skeleton" style={{ height: 20, width: "40%" }} />
+        </div>
+      </PublicShell>
     );
   }
 
   if (isError && error instanceof ApiError && error.status === 404) notFound();
 
-  if (isError) {
+  if (isError || !community) {
     return (
-      <div className="min-h-screen bg-[#f7fbfd] text-[#102f45]">
-        <SiteHeader />
-        <main className="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
-          <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-950">
-            <h1 className="text-xl font-semibold">Community details are unavailable</h1>
-            <p className="mt-2 text-sm leading-6">We could not load this community from the backend. Please check your connection and try again.</p>
-            <Button type="button" onClick={() => void refetch()} className="mt-5">Retry</Button>
+      <PublicShell active="explore">
+        <div className="container" style={{ paddingTop: 64, paddingBottom: 96 }}>
+          <div className="alert alert-danger" role="alert">
+            <Icon name="alertCircle" size={18} />
+            <div className="min-w-0">
+              <p className="font-semibold">Community details are unavailable</p>
+              <p className="mt-1 text-15">
+                {apiErrorMessage(error)} Please check your connection and try again.
+              </p>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm mt-4"
+                onClick={() => void refetch()}
+              >
+                Retry
+              </button>
+            </div>
           </div>
-        </main>
-        <SiteFooter />
-      </div>
+        </div>
+      </PublicShell>
     );
   }
 
-  if (!community) notFound();
-
-  // The backend detail contract includes the aggregate but does not expose
-  // individual reviews to anonymous visitors (its review-list route is auth-gated).
-  const ratingSummary = community as typeof community & { rating?: number | null; reviewCount?: number };
-  const rating = ratingSummary.rating ?? null;
-  const reviewCount = ratingSummary.reviewCount ?? 0;
-
   const enrollment =
-    enrollments.find((e) => e.community.id === community.id && e.status === "active") ?? null;
-  const isOwner = !!me && me.id === community.creator.userId;
+    enrollments.find((item) => item.community.id === community.id && item.status === "active") ?? null;
+  const isOwner = Boolean(me && me.id === community.creator.userId);
+  const isEnrolled = enrollment !== null;
+  const enrollHref = me ? `/enroll/${community.slug}` : `/auth/login?next=/enroll/${community.slug}`;
+  const rating = community.rating ?? null;
+  const reviewCount = community.reviewCount ?? 0;
+  const primaryCategory = community.categories[0];
+
+  const tabs = [
+    { id: "overview", label: "Overview" },
+    { id: "curriculum", label: "Curriculum" },
+    { id: "reviews", label: "Reviews", count: reviewCount },
+    { id: "members", label: "Members", count: community.memberCount },
+    { id: "feed", label: "Feed" },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#f7fbfd] text-[#102f45]">
-      <SiteHeader />
+    <PublicShell active="explore">
+      <div className="container" style={{ paddingTop: 32, paddingBottom: 96 }}>
+        {/* Breadcrumb */}
+        <nav className="breadcrumb" style={{ marginBottom: 24 }} aria-label="Breadcrumb">
+          <Link href="/communities">Explore</Link>
+          <span className="sep">/</span>
+          {primaryCategory ? (
+            <Link href={`/communities?category=${encodeURIComponent(primaryCategory.slug)}`}>
+              {primaryCategory.name}
+            </Link>
+          ) : (
+            <span className="sep">/</span>
+          )}
+          {primaryCategory ? <span className="sep">/</span> : null}
+          <span className="current">{community.title}</span>
+        </nav>
 
-      <main className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-12">
-        <div className="overflow-hidden rounded-[28px] border border-sky-100 bg-white p-2 shadow-[0_14px_45px_-34px_rgba(9,51,76,.35)]">
-          <div className="relative flex h-56 items-center justify-center overflow-hidden rounded-[22px] bg-gradient-to-br from-[#dff4fa] via-[#eaf8fc] to-[#c8eaf4] md:h-72 lg:h-[360px]">
-            {community.imageUrl ? (
-              <Image
-                src={community.imageUrl}
-                alt={community.title}
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 1152px"
-                className="object-cover"
-              />
-            ) : (
-              <span className="font-display text-7xl font-semibold text-[#1c7092]/30 md:text-8xl" aria-hidden="true">
-                {community.title.charAt(0)}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          {/* ---------------- LEFT ---------------- */}
           <div className="min-w-0">
-            <header>
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-800">Community</p>
-              <h1 className="mt-2 font-display text-3xl tracking-tight text-[#092d46] md:text-4xl">
-                {community.title}
-              </h1>
-              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-slate-600">
-                <span className="inline-flex items-center gap-2">
-                  <Users className="h-4 w-4 text-sky-800" aria-hidden="true" />
-                  {community.memberCount.toLocaleString()} members
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <MoneyAmount
-                    priceAmount={community.priceAmount}
-                    currency={community.priceCurrency}
-                    isFree={community.isFree}
-                  />
-                </span>
-                <span
-                  className="inline-flex items-center gap-1.5"
-                  aria-label={reviewCount > 0 && rating !== null ? `${rating.toFixed(1)} out of 5 from ${reviewCount} ${reviewCount === 1 ? "rating" : "ratings"}` : "No ratings yet"}
-                >
-                  <Star className="h-4 w-4 text-amber-500" aria-hidden="true" />
-                  {reviewCount > 0 && rating !== null ? `${rating.toFixed(1)} · ${reviewCount} ${reviewCount === 1 ? "rating" : "ratings"}` : "No ratings yet"}
-                </span>
-                {community.categories.map((c) => (
-                  <Link
-                    key={c.id}
-                    href={`/communities?category=${c.slug}`}
-                    className="rounded-full border border-sky-100 bg-[#f1fbfe] px-3 py-1 text-xs font-semibold text-sky-900 transition-colors hover:border-sky-300 hover:bg-sky-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
-                  >
-                    {c.name}
-                  </Link>
-                ))}
-              </div>
-              <p className="mt-5 max-w-3xl text-base leading-8 text-slate-700">{community.description}</p>
-            </header>
+            <div
+              className="overflow-hidden"
+              style={{ height: 320, borderRadius: "var(--r-lg)", marginBottom: 32 }}
+            >
+              <CommunityCover
+                src={community.imageUrl}
+                title={community.title}
+                category={primaryCategory?.name}
+              />
+            </div>
 
-            <section className="mt-8 rounded-2xl border border-sky-100 bg-white p-5 shadow-sm md:p-6" aria-labelledby="mentor-title">
-              <h2 id="mentor-title" className="font-display text-xl font-semibold text-[#092d46]">Your mentor</h2>
+            <div className="flex flex-wrap items-center" style={{ gap: 10, marginBottom: 12 }}>
+              {community.categories.map((category) => (
+                <span key={category.id} className="tag">
+                  {category.name}
+                </span>
+              ))}
+              <Badge variant={community.isPublished ? "success" : "neutral"}>
+                {community.isPublished ? "Active" : "Unpublished"}
+              </Badge>
+            </div>
+
+            <h1 className="h1" style={{ marginBottom: 24, fontSize: 36 }}>
+              {community.title}
+            </h1>
+
+            {/* Creator row */}
+            <div className="flex flex-wrap items-center" style={{ gap: 14, marginBottom: 40 }}>
               <Link
                 href={`/creators/${community.creator.userId}`}
-                className="group mt-4 flex items-center gap-4 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-700"
+                className="flex items-center"
+                style={{ gap: 14 }}
               >
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-sky-100 bg-[#e1f5fb] text-xl font-semibold text-[#0c5878]">
-                  {community.creator.displayName.charAt(0)}
-                </div>
-                <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-2 font-semibold text-[#092d46] group-hover:text-sky-800">
+                <Avatar
+                  name={community.creator.displayName}
+                  src={community.creator.avatarUrl}
+                  size="lg"
+                />
+                <span>
+                  <span
+                    className="flex items-center"
+                    style={{ gap: 6, fontSize: "var(--fs-17)", fontWeight: 600, color: "var(--ink)" }}
+                  >
                     {community.creator.displayName}
-                    <VerificationBadge status={community.creator.verificationStatus} />
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">Meet the creator behind this community</p>
-                </div>
+                    {community.creator.isVerified ? <VerifiedMark size={14} /> : null}
+                  </span>
+                  <span className="text-sm muted" style={{ display: "block" }}>
+                    {creator
+                      ? `${creator.communityCount} ${
+                          creator.communityCount === 1 ? "community" : "communities"
+                        }`
+                      : "Community creator"}
+                  </span>
+                </span>
               </Link>
-            </section>
+            </div>
 
-            <section className="mt-9" aria-labelledby="learning-title">
-              <div className="flex items-end justify-between gap-4 border-b border-sky-100 pb-3">
-                <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-800">Curriculum</p>
-                  <h2 id="learning-title" className="mt-1 font-display text-xl font-semibold text-[#092d46]">What you&apos;ll learn</h2>
-                </div>
-                {community.courses.length > 0 && (
-                  <span className="text-sm text-slate-500">{community.courses.length} {community.courses.length === 1 ? "course" : "courses"}</span>
-                )}
-              </div>
-              {community.courses.length === 0 ? (
-                <p className="mt-4 rounded-xl border border-dashed border-sky-200 bg-white p-5 text-sm leading-6 text-slate-600">
-                  Curriculum is being prepared — check back soon.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {community.courses.map((course, i) => (
-                    <div key={course.id} className="rounded-xl border border-sky-100 bg-white p-4 shadow-sm transition-colors hover:border-sky-200 md:p-5">
-                      <p className="flex items-center gap-3 font-medium text-[#092d46]">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#e5f6fb] text-sm font-semibold text-sky-900">
-                          {i + 1}
-                        </span>
-                        {course.title}
-                      </p>
-                      <p className="mt-2 flex items-center gap-2 pl-11 text-xs font-medium text-slate-500">
-                        <BookOpen className="h-3.5 w-3.5 text-sky-700" aria-hidden="true" />
-                        {course.lessonCount} lessons · {course.moduleCount} modules
-                      </p>
-                    </div>
+            {/* Tabs */}
+            <div style={{ marginBottom: 32 }}>
+              <Tabs tabs={tabs} value={tab} onChange={(value) => setTab(value as TabId)} />
+            </div>
+
+            {tab === "overview" ? (
+              <section aria-label="Community overview">
+                <div className="flex flex-col gap-4">
+                  {community.description.split(/\n{2,}/).map((paragraph, index) => (
+                    <p key={index} className="text-body" style={{ color: "var(--ink-2)", lineHeight: 1.6 }}>
+                      {paragraph}
+                    </p>
                   ))}
                 </div>
-              )}
-            </section>
 
+                <div
+                  className="flex flex-wrap items-center"
+                  style={{ gap: 20, marginTop: 32, fontSize: "var(--fs-14)", color: "var(--ink-3)" }}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Icon name="users" size={16} />
+                    <span className="tnum" style={{ color: "var(--ink-2)" }}>
+                      {community.memberCount.toLocaleString()} members
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Icon name="star" size={16} />
+                    {reviewCount > 0 && rating !== null ? (
+                      <Stars rating={rating} count={reviewCount} />
+                    ) : (
+                      <span>No ratings yet</span>
+                    )}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Icon name="bookOpen" size={16} />
+                    <span className="tnum" style={{ color: "var(--ink-2)" }}>
+                      {community.courses.length} {community.courses.length === 1 ? "course" : "courses"}
+                    </span>
+                  </span>
+                </div>
+              </section>
+            ) : null}
+
+            {tab === "curriculum" ? (
+              <section aria-label="Curriculum">
+                <CommunityCurriculum
+                  slug={community.slug}
+                  summaryCourses={community.courses}
+                  isEnrolled={isEnrolled}
+                  enrollHref={enrollHref}
+                />
+              </section>
+            ) : null}
+
+            {tab === "reviews" ? (
+              <section aria-label="Reviews">
+                <CommunityReviews
+                  slug={community.slug}
+                  rating={rating}
+                  reviewCount={reviewCount}
+                  isEnrolled={isEnrolled}
+                  enrollHref={enrollHref}
+                />
+              </section>
+            ) : null}
+
+            {tab === "members" ? (
+              <section aria-label="Members">
+                <CommunityMembers
+                  slug={community.slug}
+                  memberCount={community.memberCount}
+                  canReadMembers={isOwner}
+                  enrollHref={enrollHref}
+                />
+              </section>
+            ) : null}
+
+            {tab === "feed" ? (
+              <section aria-label="Community feed">
+                <CommunityFeed slug={community.slug} isEnrolled={isEnrolled} enrollHref={enrollHref} />
+              </section>
+            ) : null}
           </div>
 
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <EnrollCard community={community} enrollment={enrollment} isOwner={isOwner} />
+          {/* ---------------- RIGHT ---------------- */}
+          <aside className="lg:sticky lg:top-20">
+            <CommunityAside
+              community={community}
+              enrollment={enrollment}
+              isOwner={isOwner}
+              creator={creator}
+              enrollHref={enrollHref}
+            />
           </aside>
         </div>
-      </main>
-
-      <SiteFooter />
-    </div>
+      </div>
+    </PublicShell>
   );
 }

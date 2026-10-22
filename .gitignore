@@ -27,3 +27,9 @@ apps/web/tsconfig.tsbuildinfo
 
 # Screenshots (local verification only)
 .openchamber/
+
+# Agent tooling lives in the global OpenCode config, never in the repo
+.opencode/
+__pycache__/
+*.pyc
+

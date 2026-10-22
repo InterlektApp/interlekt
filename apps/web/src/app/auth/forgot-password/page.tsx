@@ -1,100 +1,170 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle2, Loader2 } from "lucide-react";
-import { AuthShell } from "@/components/auth-shell";
-import { post } from "@/lib/api/client";
+import { AuthCard } from "@/components/public/auth-card";
+import { TextField } from "@/components/public/text-field";
+import { Icon } from "@/components/ui/icon";
+import { useForgotPassword } from "@/hooks/use-public-auth";
+import { ApiError } from "@/lib/api/client";
+import { apiErrorMessage } from "@/lib/api/errors";
+
+/**
+ * A7 — request a password reset link.
+ *
+ * `POST /auth/forgot-password` answers 202 whether or not the address is
+ * registered, so the page never claims that an account exists. The backend
+ * does not publish a reset-link expiry, so none is quoted here.
+ */
 
 const schema = z.object({
   email: z.string().email("Enter a valid email address"),
 });
 
-type Form = z.infer<typeof schema>;
+type FormValues = z.infer<typeof schema>;
+
+const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function ForgotPasswordPage() {
-  const [sent, setSent] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
+  const forgot = useForgotPassword();
+  const [sentTo, setSentTo] = React.useState<string | null>(null);
+  const [serverError, setServerError] = React.useState<string | null>(null);
+  const [cooldown, setCooldown] = React.useState(0);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<Form>({ resolver: zodResolver(schema) });
+    formState: { errors },
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  const onSubmit = async (data: Form) => {
+  React.useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = window.setTimeout(() => setCooldown((value) => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
+
+  const request = (email: string) => {
     setServerError(null);
-    try {
-      // 202 either way — the backend never confirms whether the email exists.
-      await post("/auth/forgot-password", { email: data.email });
-      setSent(true);
-    } catch {
-      // Offline: still show the confirmation (same as the server would).
-      setSent(true);
-    }
+    forgot.mutate(
+      { email },
+      {
+        onSuccess: () => {
+          setSentTo(email);
+          setCooldown(RESEND_COOLDOWN_SECONDS);
+        },
+        onError: (error) => {
+          // A network failure tells us nothing about the account either, so
+          // the same neutral confirmation is shown.
+          if (error instanceof ApiError && error.status === 0) {
+            setSentTo(email);
+            setCooldown(RESEND_COOLDOWN_SECONDS);
+            return;
+          }
+          setServerError(apiErrorMessage(error));
+        },
+      },
+    );
   };
 
+  const onSubmit = (values: FormValues) => request(values.email);
+
   return (
-    <AuthShell side="center">
-      <h1 className="text-center text-[26px] font-semibold tracking-[-0.035em] text-[#092d49] sm:text-[28px]">
-        Forgot your password?
-      </h1>
-      {sent ? (
+    <AuthCard
+      title={sentTo ? "Check your email" : "Reset your password"}
+      lead={
+        sentTo
+          ? "We've sent a reset link to your inbox."
+          : "Enter your email and we'll send you a reset link."
+      }
+    >
+      {sentTo ? (
         <>
-          <p role="status" className="mt-5 flex items-start gap-2 rounded-xl border border-sky-100 bg-sky-50/70 p-4 text-[15px] leading-relaxed text-[#19394f]">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-sky-700" />
-            If that email is registered, a reset link is on its way. Check your
-            inbox (and spam folder).
-          </p>
-          <Link
-            href="/auth/login"
-            className="press mt-6 block h-[52px] w-full rounded-full bg-[#073653] text-center text-[15px] font-semibold leading-[52px] text-white shadow-sm transition-colors hover:bg-[#0b496f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200"
-          >
-            Back to login
-          </Link>
-        </>
-      ) : (
-        <>
-          <p className="mt-3 text-center text-[15px] leading-6 text-slate-600">
-            Enter your account email and we&apos;ll send you a reset link.
-          </p>
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
-            <div>
-              <input
-                type="email"
-                autoComplete="email"
-                placeholder="Email address*"
-                aria-label="Email address"
-                {...register("email")}
-                className="h-[52px] w-full rounded-xl border border-[#c9d7e1] bg-white px-4 text-[15px] text-[#102f46] placeholder:text-slate-500 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
-              />
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-              )}
+          <div className="alert alert-success" style={{ marginBottom: 24 }}>
+            <Icon name="checkCircle" size={18} />
+            <div className="min-w-0">
+              If an account exists for <strong style={{ color: "var(--ink)" }}>{sentTo}</strong>, we&apos;ve
+              sent it a reset link. Open the email and follow the link to choose a new password.
             </div>
-            {serverError && (
-              <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">{serverError}</p>
-            )}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="press mx-auto h-[52px] w-full max-w-[476px] rounded-full bg-[#073653] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0b496f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Sending…
+          </div>
+
+          <div className="flex flex-col" style={{ gap: 12 }}>
+            <a className="btn btn-secondary btn-block" href={`mailto:${sentTo}`} style={{ height: 48 }}>
+              Open email app
+            </a>
+            <p className="text-sm muted" style={{ textAlign: "center" }}>
+              Didn&apos;t get it?{" "}
+              {cooldown > 0 ? (
+                <span style={{ color: "var(--ink-3)" }}>
+                  Resend available in {cooldown}s
                 </span>
               ) : (
-                "Send reset link"
-              )}
-            </button>
-          </form>
+                <button
+                  type="button"
+                  onClick={() => request(sentTo)}
+                  disabled={forgot.isPending}
+                  style={{ color: "var(--accent)" }}
+                >
+                  {forgot.isPending ? "Resending…" : "Resend"}
+                </button>
+              )}{" "}
+              ·{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setSentTo(null);
+                  setCooldown(0);
+                }}
+                style={{ color: "var(--accent)" }}
+              >
+                Try a different email
+              </button>
+            </p>
+          </div>
         </>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col" style={{ gap: 20 }} noValidate>
+          <TextField
+            id="email"
+            label="Email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            icon="mail"
+            error={errors.email?.message}
+            {...register("email")}
+          />
+
+          {serverError ? (
+            <p role="alert" className="alert alert-danger">
+              {serverError}
+            </p>
+          ) : null}
+
+          <button
+            type="submit"
+            className="btn btn-primary btn-block"
+            style={{ height: 48 }}
+            disabled={forgot.isPending}
+          >
+            {forgot.isPending ? "Sending…" : "Send reset link"}
+          </button>
+        </form>
       )}
-    </AuthShell>
+
+      <div className="text-center" style={{ marginTop: 32 }}>
+        <p className="text-sm muted">
+          <Link
+            href="/auth/login"
+            style={{ color: "var(--accent)", display: "inline-flex", alignItems: "center", gap: 4 }}
+          >
+            <Icon name="chevronLeft" size={14} />
+            Back to sign in
+          </Link>
+        </p>
+      </div>
+    </AuthCard>
   );
 }

@@ -1,0 +1,51 @@
+import { cn } from "@/lib/utils";
+
+/**
+ * The official Interlekt brand mark:
+ * Community members rising from an open book.
+ */
+export function BrandMark({ className }: { className?: string }) {
+  return (
+    <span className={cn("inline-flex items-center justify-center shrink-0", className)} aria-hidden="true">
+      <svg viewBox="0 0 64 64" fill="none" width={28} height={28} className="rounded-lg">
+        <rect width="64" height="64" rx="16" fill="#F3FBFE" />
+        <circle cx="17" cy="17" r="5.2" fill="#073B63" />
+        <circle cx="32" cy="13.7" r="7" fill="#18A9E2" />
+        <circle cx="47" cy="17" r="5.2" fill="#073B63" />
+        <path d="M7.5 34c1.7-7 5.7-10.5 11.5-10.5 4.5 0 8.1 2.4 10.3 7-3.7 1.7-7 4.9-9.6 9.1-3.6-2.8-7.5-4.7-12.2-5.6Z" fill="#073B63" />
+        <path d="M23.4 30.4c1.9-8.2 4.8-12.2 8.6-12.2s6.7 4 8.6 12.2c-3.4 2.8-6.2 6.4-8.6 10.7-2.4-4.3-5.2-7.9-8.6-10.7Z" fill="#18A9E2" />
+        <path d="M34.7 30.5c2.2-4.6 5.8-7 10.3-7 5.8 0 9.8 3.5 11.5 10.5-4.7.9-8.6 2.8-12.2 5.6-2.6-4.2-5.9-7.4-9.6-9.1Z" fill="#073B63" />
+        <path d="M5 38c10.1-1 19.9 2.4 27 11.3C39.1 40.4 48.9 37 59 38v5.5c-9.9-.9-19.1 2.7-27 11.8-7.9-9.1-17.1-12.7-27-11.8V38Z" fill="#073B63" />
+        <path d="M7.2 34.1c9.2-.1 18 3.2 24.8 9.9 6.8-6.7 15.6-10 24.8-9.9v3.8c-9.9-.5-18.8 3-24.8 10.5-6-7.5-14.9-11-24.8-10.5v-3.8Z" fill="#18A9E2" />
+        <path d="M32 44v10" stroke="#073B63" strokeWidth={2} strokeLinecap="round" />
+      </svg>
+    </span>
+  );
+}
+
+/**
+ * The Interlekt brand wordmark.
+ */
+export function BrandWordmark({ className }: { className?: string }) {
+  return (
+    <span className={cn("font-sans text-[20px] font-bold tracking-tight text-[#073451] dark:text-white", className)}>
+      Interlekt
+    </span>
+  );
+}
+
+export interface LogoProps {
+  className?: string;
+  markClassName?: string;
+  showWordmark?: boolean;
+}
+
+/** Mark + wordmark, the default brand lockup used in every shell. */
+export function Logo({ className, markClassName, showWordmark = true }: LogoProps) {
+  return (
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <BrandMark className={markClassName} />
+      {showWordmark ? <BrandWordmark /> : null}
+    </span>
+  );
+}

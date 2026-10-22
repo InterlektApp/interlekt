@@ -3,100 +3,32 @@
 @tailwind utilities;
 
 /*
- * Interlekt design tokens.
+ * Interlekt — Tailwind entry.
  *
- * Concept: "the campus, not the classroom" — trust + momentum.
- * Roles: paper ground, ink text, ONE brand blue accent, line-driven
- * surfaces. Accent stays under ~10% of any viewport.
+ * The design system itself lives in `./design-system.css` (tokens + every
+ * component class, ported from the v3.1 redesign package). It is imported
+ * from `layout.tsx` and is layered as base/components, so Tailwind
+ * utilities always win over component classes.
+ *
+ * This file holds only Tailwind-layer utilities and global behaviour that
+ * is not part of the component library.
  */
 
 @layer base {
-  :root {
-    /* Ground + surfaces */
-    --background: 195 50% 98%;
-    --foreground: 213 45% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 213 45% 10%;
-
-    /* Brand — clear cyan against deep navy */
-    --brand-50: 190 90% 97%;
-    --brand-100: 191 82% 92%;
-    --brand-500: 195 80% 52%;
-    --brand-600: 195 78% 45%;
-    --brand-700: 199 76% 34%;
-    --ink: 213 45% 10%;
-
-    --primary: 203 87% 20%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 191 78% 93%;
-    --secondary-foreground: 205 75% 20%;
-    --muted: 195 32% 94%;
-    --muted-foreground: 215 18% 42%;
-    --accent: 191 70% 93%;
-    --accent-foreground: 205 75% 20%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 195 32% 88%;
-    --input: 195 32% 86%;
-    --ring: 195 78% 45%;
-    --radius: 0.85rem;
-
-    /* Motion — per animation spec, one curve family */
-    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-    --duration-fast: 150ms;
-    --duration-med: 220ms;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    text-rendering: optimizeLegibility;
-  }
-  html {
-    scroll-behavior: smooth;
-  }
-  ::selection {
-    background: hsl(var(--brand-100));
-  }
-  :focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
+    font-feature-settings: "cv11", "ss01", "tnum";
+    text-rendering: optimizeTextLegibility;
   }
 }
 
 @layer components {
-  /* Eyebrow label: 11px caps mono, wide tracking — the hierarchy anchor */
+  /* Legacy alias kept while the remaining v1 screens are ported.
+     Matches the design system's quiet `.eyebrow` label. */
   .label-eyebrow {
-    @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500;
-  }
-
-  /* Card hover lift — feedback, near-imperceptible, hover-capable only */
-  @media (hover: hover) and (pointer: fine) {
-    .lift {
-      transition:
-        transform var(--duration-med) var(--ease-out),
-        box-shadow var(--duration-med) var(--ease-out);
-    }
-    .lift:hover {
-      transform: translateY(-2px);
-      box-shadow:
-        0 12px 24px -12px rgb(15 23 42 / 0.18),
-        0 4px 8px -4px rgb(15 23 42 / 0.08);
-    }
-  }
-
-  /* Button press feedback */
-  .press {
-    transition: transform var(--duration-fast) var(--ease-out);
-  }
-  .press:active {
-    transform: scale(0.98);
+    font-size: var(--fs-13);
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: 0;
   }
 }
 
@@ -109,18 +41,7 @@
   }
 }
 
-/* First-view entrance: rare/first-time tier, opacity + slight rise only */
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Motion is opt-in and never bouncy; honour the OS preference. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -1,201 +1,258 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { GraduationCap, Loader2, Presentation } from "lucide-react";
-import { AuthShell } from "@/components/auth-shell";
+import { AuthCard } from "@/components/public/auth-card";
+import { PasswordField } from "@/components/public/password-field";
+import { PasswordStrength } from "@/components/public/password-strength";
+import { TextField } from "@/components/public/text-field";
+import { GoogleButtonDisabled } from "@/components/public/google-button-disabled";
+import { Icon } from "@/components/ui/icon";
 import { useRegister } from "@/hooks/use-auth";
 import { ApiError } from "@/lib/api/client";
 import { apiErrorMessage, apiErrorToFormErrors } from "@/lib/api/errors";
-import { cn } from "@/lib/utils";
 
-const registerSchema = z
-  .object({
-    first_name: z.string().min(2, "First name must be at least 2 characters"),
-    last_name: z.string().min(2, "Last name must be at least 2 characters"),
-    email: z.string().email("Enter a valid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    role: z.enum(["learner", "creator"]),
-  });
+/**
+ * A6 — create an account.
+ *
+ * `POST /auth/register` takes `{ email, password, displayName, role }`. The
+ * role chooser maps straight onto that field. There is no email-verification
+ * step in the product, so registration lands the learner on the dashboard
+ * and the creator on the onboarding flow.
+ */
 
-type RegisterForm = z.infer<typeof registerSchema>;
+const registerSchema = z.object({
+  displayName: z.string().min(2, "Tell us your name"),
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(8, "Use at least 8 characters"),
+  terms: z.boolean().refine((accepted) => accepted, {
+    message: "Please accept the terms to continue",
+  }),
+});
 
-const inputClass =
-  "h-[52px] w-full rounded-xl border border-[#c9d7e1] bg-white px-4 text-[15px] text-[#102f46] placeholder:text-slate-500 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
+type RegisterValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [serverError, setServerError] = useState<string | null>(null);
-
-  const registerMutation = useRegister();
+  const register = useRegister();
+  const [serverError, setServerError] = React.useState<string | null>(null);
+  const [role, setRole] = React.useState<"learner" | "creator">("learner");
 
   const {
-    register,
+    register: bind,
     handleSubmit,
-    watch,
-    setValue,
     setError,
+    watch,
     formState: { errors },
-  } = useForm<RegisterForm>({
+  } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: "learner" },
+    defaultValues: { terms: false },
+    mode: "onBlur",
   });
-  const role = watch("role");
 
-  const onSubmit = (data: RegisterForm) => {
+  const password = watch("password") ?? "";
+
+  const onSubmit = (values: RegisterValues) => {
     setServerError(null);
-    // POST /auth/register with displayName = first + last.
-    registerMutation.mutate(
+    register.mutate(
       {
-        email: data.email,
-        password: data.password,
-        displayName: `${data.first_name.trim()} ${data.last_name.trim()}`,
-        role: data.role,
+        email: values.email,
+        password: values.password,
+        displayName: values.displayName,
+        role: role,
       },
       {
-        onSuccess: (user) =>
-          router.replace(user.roles.includes("creator") ? "/onboarding" : "/dashboard"),
-        onError: (err) => {
-          if (err instanceof ApiError && err.code === "email_taken") {
-            setError("email", { message: "An account with this email already exists." });
-            return;
-          }
-          const fieldErrors = apiErrorToFormErrors(err);
+        onSuccess: (user) => {
+          router.replace(user.roles.includes("creator") ? "/onboarding" : "/dashboard");
+        },
+        onError: (error) => {
+          const fieldErrors = apiErrorToFormErrors(error);
           if (fieldErrors) {
-            for (const [field, message] of Object.entries(fieldErrors)) {
-              setError(field as keyof RegisterForm, { message });
+            if (fieldErrors.email) setError("email", { message: fieldErrors.email });
+            if (fieldErrors.password) setError("password", { message: fieldErrors.password });
+            if (fieldErrors.display_name) {
+              setError("displayName", { message: fieldErrors.display_name });
             }
-            return;
           }
-          setServerError(apiErrorMessage(err));
+          setServerError(
+            error instanceof ApiError && error.code === "email_taken"
+              ? "That email address is already registered. Try signing in instead."
+              : apiErrorMessage(error),
+          );
         },
       },
     );
   };
 
+  const roles = [
+    {
+      id: "learner" as const,
+      title: "I'm a learner",
+      text: "Discover and join communities.",
+      icon: "user",
+    },
+    {
+      id: "creator" as const,
+      title: "I'm a creator",
+      text: "Teach and earn in naira.",
+      icon: "bookOpen",
+    },
+  ];
+
   return (
-    <AuthShell side="right">
-      <h1 className="text-center text-[26px] font-semibold tracking-[-0.035em] text-[#092d49] sm:text-[28px]">
-        Create your own Account
-      </h1>
-      <p className="mt-3 text-center text-[15px] leading-6 text-slate-700">
-        Already have an account?{" "}
-        <Link href="/auth/login" className="font-medium text-sky-800 underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
-          Sign in
-        </Link>
-      </p>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
-        {/* Role: learner or creator */}
-        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="I want to">
-          <button
-            type="button"
-            role="radio"
-            aria-checked={role === "learner"}
-            onClick={() => setValue("role", "learner")}
-            className={cn(
-              "flex min-h-[66px] items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-100",
-              role === "learner"
-                ? "border-sky-500 bg-[#eef9fd] ring-1 ring-sky-500"
-                : "border-[#d6e1e8] bg-white hover:border-sky-300",
-            )}
-          >
-            <GraduationCap className="h-5 w-5 text-sky-700" />
-            <span>
-              <span className="block text-sm font-semibold text-slate-900">Learner</span>
-              <span className="block text-xs text-slate-500">Join & learn</span>
-            </span>
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={role === "creator"}
-            onClick={() => setValue("role", "creator")}
-            className={cn(
-              "flex min-h-[66px] items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-100",
-              role === "creator"
-                ? "border-sky-500 bg-[#eef9fd] ring-1 ring-sky-500"
-                : "border-[#d6e1e8] bg-white hover:border-sky-300",
-            )}
-          >
-            <Presentation className="h-5 w-5 text-sky-700" />
-            <span>
-              <span className="block text-sm font-semibold text-slate-900">Creator</span>
-              <span className="block text-xs text-slate-500">Teach & earn</span>
-            </span>
-          </button>
+    <AuthCard title="Create your account" lead="Join learners and creators building real skills">
+      {/* Step 1 — role */}
+      <div style={{ marginBottom: 32 }}>
+        <div className="flex items-center" style={{ gap: 8, marginBottom: 16 }}>
+          <span className="text-xs" style={{ fontWeight: 500, color: "var(--ink-2)" }}>
+            Step 1
+          </span>
+          <span className="text-xs muted">·</span>
+          <span className="text-xs muted">Choose how you&apos;ll use Interlekt</span>
         </div>
 
-        <div>
-          <input placeholder="First name" aria-label="First name" {...register("first_name")} className={inputClass} />
-          {errors.first_name && (
-            <p className="mt-1 text-xs text-red-600">{errors.first_name.message}</p>
-          )}
+        <div className="grid grid-2" style={{ gap: 12 }}>
+          {roles.map((option) => {
+            const active = role === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setRole(option.id)}
+                aria-pressed={active}
+                className="flex flex-col items-start text-left"
+                style={{
+                  gap: 12,
+                  padding: 24,
+                  background: active ? "var(--accent-soft)" : "var(--paper)",
+                  border: active ? "2px solid var(--accent)" : "1px solid var(--line-2)",
+                  borderRadius: "var(--r-lg)",
+                  cursor: "pointer",
+                }}
+              >
+                <Icon
+                  name={option.icon}
+                  size={24}
+                  className={active ? "text-accent" : "text-ink-2"}
+                />
+                <span>
+                  <span
+                    style={{
+                      display: "block",
+                      fontSize: "var(--fs-17)",
+                      fontWeight: 600,
+                      color: "var(--ink)",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {option.title}
+                  </span>
+                  <span className="text-xs" style={{ color: "var(--ink-3)" }}>
+                    {option.text}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <div>
-          <input placeholder="Last name" aria-label="Last name" {...register("last_name")} className={inputClass} />
-          {errors.last_name && (
-            <p className="mt-1 text-xs text-red-600">{errors.last_name.message}</p>
-          )}
+      </div>
+
+      {/* Step 2 — details */}
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col"
+        style={{ gap: 18 }}
+        noValidate
+      >
+        <div className="flex items-center" style={{ gap: 8, marginBottom: 4 }}>
+          <span className="text-xs" style={{ fontWeight: 500, color: "var(--ink-2)" }}>
+            Step 2
+          </span>
+          <span className="text-xs muted">·</span>
+          <span className="text-xs muted">Tell us about you</span>
         </div>
+
+        <TextField
+          id="fullname"
+          label="Full name"
+          type="text"
+          autoComplete="name"
+          placeholder="Ada Okafor"
+          error={errors.displayName?.message}
+          {...bind("displayName")}
+        />
+
+        <TextField
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          icon="mail"
+          error={errors.email?.message}
+          {...bind("email")}
+        />
+
         <div>
-          <input
-            type="email"
-            placeholder="Email Address"
-            aria-label="Email address"
-            {...register("email")}
-            className={inputClass}
-          />
-          {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
-        </div>
-        <div>
-          <input
-            type="password"
+          <PasswordField
+            id="password"
+            label="Password"
             autoComplete="new-password"
-            placeholder="Password"
-            aria-label="Password"
-            {...register("password")}
-            className={inputClass}
+            placeholder="At least 8 characters"
+            error={errors.password?.message}
+            {...bind("password")}
           />
-          {errors.password && (
-            <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-          )}
+          <PasswordStrength value={password} className="mt-2" />
         </div>
 
-        <p className="px-1 text-center text-[13px] leading-5 text-slate-600">
-          By signing up, you accept our{" "}
-            <Link href="/terms" className="text-sky-800 underline underline-offset-2 hover:text-sky-950 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
-            terms
-          </Link>{" "}
-          and{" "}
-            <Link href="/privacy" className="text-sky-800 underline underline-offset-2 hover:text-sky-950 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
-            privacy policy
-          </Link>
-        </p>
+        <label className="checkbox-row text-14" style={{ color: "var(--ink-2)" }}>
+          <input type="checkbox" {...bind("terms")} />
+          <span style={{ lineHeight: 1.5 }}>
+            I agree to the{" "}
+            <Link href="/terms" style={{ color: "var(--accent)" }}>
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" style={{ color: "var(--accent)" }}>
+              Privacy Policy
+            </Link>
+            .
+          </span>
+        </label>
+        {errors.terms ? (
+          <p className="field-error" role="alert">
+            {errors.terms.message}
+          </p>
+        ) : null}
 
-        {serverError && (
-          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">{serverError}</p>
-        )}
+        {serverError ? (
+          <p role="alert" className="alert alert-danger">
+            {serverError}
+          </p>
+        ) : null}
 
         <button
           type="submit"
-          disabled={registerMutation.isPending}
-          className="press h-[52px] w-full rounded-full bg-[#073653] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0b496f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn btn-primary btn-block"
+          style={{ height: 48, marginTop: 4 }}
+          disabled={register.isPending}
         >
-          {registerMutation.isPending ? (
-            <span className="inline-flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Creating account…
-            </span>
-          ) : (
-            "Sign up"
-          )}
+          {register.isPending ? "Creating your account…" : "Create account"}
         </button>
       </form>
-    </AuthShell>
+
+      <div className="text-center" style={{ marginTop: 32 }}>
+        <p className="text-sm muted">
+          Already have an account?{" "}
+          <Link href="/auth/login" style={{ color: "var(--accent)" }}>
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </AuthCard>
   );
 }

@@ -1,202 +1,378 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ArrowRight,
-  BookOpenCheck,
-  Compass,
-  Star,
-  ShieldCheck,
-  Wallet,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { CommunityCard } from "@/components/community-card";
-import { HeroIconPattern } from "@/components/hero-icon-pattern";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
-import { useCommunities } from "@/hooks/use-communities";
-import type { CommunityListItem } from "@/types/api";
+import { PublicShell } from "@/components/public/public-shell";
+import { SearchField } from "@/components/public/search-field";
+import { CommunityCard } from "@/components/ui/content-cards";
+import { Alert, EmptyState } from "@/components/ui/feedback";
+import { Icon } from "@/components/ui/icon";
+import { Reveal } from "@/components/ui/motion";
+import { AmbientIcons } from "@/components/shell/ambient-icons";
+import { useCategories, useCommunities } from "@/hooks/use-communities";
 
-function CommunityRating({ community }: { community: CommunityListItem }) {
-  const summary = community as CommunityListItem & { rating?: number | null; reviewCount?: number };
-  const rating = summary.rating ?? null;
-  const count = summary.reviewCount ?? 0;
-  return (
-    <p className="inline-flex items-center gap-1.5 px-1 text-xs text-slate-600" aria-label={count > 0 && rating !== null ? `${rating.toFixed(1)} out of 5 from ${count} ${count === 1 ? "rating" : "ratings"}` : "No ratings yet"}>
-      <Star className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
-      {count > 0 && rating !== null ? `${rating.toFixed(1)} · ${count} ${count === 1 ? "rating" : "ratings"}` : "No ratings yet"}
-    </p>
-  );
-}
+/**
+ * A1 — the landing page.
+ *
+ * Every number on this page comes from the API: the community total from
+ * `GET /communities` and the category list from `GET /categories`. There is
+ * no platform-stats endpoint yet, so no learner count, earnings figure or
+ * mentor count is shown.
+ */
 
 const STEPS = [
   {
-    icon: Compass,
-    title: "Find your people",
-    text: "Explore published communities led by people who have done the work. Clear community details and pricing help you choose with confidence.",
+    title: "Discover",
+    text: "Search by skill, category or creator. Every listing shows the member count, the rating and the price in naira before you commit to anything.",
   },
   {
-    icon: Wallet,
-    title: "Join with ease",
-    text: "Compare community details and prices in naira before deciding where you want to learn.",
+    title: "Join a community",
+    text: "Open a community to read exactly what is inside. Free communities can be joined straight away; paid ones show their price up front.",
   },
   {
-    icon: BookOpenCheck,
-    title: "Grow together",
-    text: "Follow practical lessons, ask questions, share your progress, and learn alongside people working toward the same goals.",
+    title: "Learn & engage",
+    text: "Work through structured courses and modules, mark lessons complete, and ask questions in the community feed alongside the creator and other members.",
   },
 ];
 
-const TRUST_POINTS = [
-  { icon: ShieldCheck, label: "Verified creators" },
-  { icon: Compass, label: "Published community listings" },
-  { icon: Wallet, label: "Clear pricing in naira" },
+const CREATOR_POINTS = [
+  {
+    title: "Publish a curriculum",
+    text: "Build courses, modules and lessons in Creator Studio. Your learners see exactly what they will work through before they join.",
+  },
+  {
+    title: "Set the price in naira",
+    text: "Every community carries a price in ₦ alongside its member count and rating, so learners can compare before they enrol.",
+  },
+  {
+    title: "Run the classroom",
+    text: "Published lessons, tracked progress and a community feed give you somewhere to teach properly instead of shipping a folder of PDFs.",
+  },
 ];
 
 export default function LandingPage() {
-  const { data: communityData, isLoading: communitiesLoading, isError: communitiesError, refetch } = useCommunities({ pageSize: 4 });
+  const {
+    data: communityData,
+    isLoading: communitiesLoading,
+    isError: communitiesError,
+    refetch,
+  } = useCommunities({ pageSize: 6, sort: "most_members" });
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+
   const communities = communityData?.items ?? [];
+  const totalCommunities = communityData?.total ?? 0;
 
   return (
-    <div className="min-h-screen overflow-hidden bg-white text-slate-950">
-      <SiteHeader />
-      <main>
-        <section className="relative isolate flex min-h-[760px] items-center justify-center overflow-hidden px-5 pb-24 pt-20 md:min-h-[820px] md:pb-28 md:pt-16">
-          <div className="pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-[62%] opacity-75 md:block [mask-image:linear-gradient(to_right,transparent,black_27%,black_100%)]">
-            <HeroIconPattern />
-          </div>
-          <div className="pointer-events-none absolute -right-32 top-[42%] -z-10 h-[440px] w-[440px] rounded-full bg-sky-50/70 blur-3xl md:hidden" />
-          <div className="relative mx-auto w-full max-w-[1100px] text-center" style={{ animation: "rise-in 550ms var(--ease-out) both" }}>
-            <p className="mb-7 inline-flex items-center gap-2 rounded-full border border-sky-100 bg-white/85 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.17em] text-sky-800 shadow-sm shadow-sky-900/[0.03] md:mb-8">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-              Learn · Connect · Grow
-            </p>
-            <h1 className="mx-auto max-w-[1060px] text-balance font-sans text-[clamp(2.75rem,6vw,5.35rem)] font-semibold leading-[1.08] tracking-[-0.055em] text-[#07111d]">
-              Get in with communities around what you know.
-            </h1>
-            <p className="mx-auto mt-7 max-w-[790px] text-pretty text-base leading-8 text-slate-600 md:mt-8 md:text-[20px] md:leading-[1.65]">
-              Learn new skills, connect with like-minded people, and create spaces where knowledge can be shared, communities can grow, and opportunities can begin.
-            </p>
-            <div className="mt-9 flex justify-center md:mt-11">
-              <Link
-                href="/communities"
-                className="press inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#b5e5f1] px-9 text-[17px] font-semibold text-[#073451] shadow-[0_10px_28px_-16px_rgba(7,52,81,.48)] transition-colors hover:bg-[#a6dff0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-700"
-              >
-                Explore communities
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
-            <p className="mt-5 text-sm text-slate-500">Find a community. Learn something real.</p>
-          </div>
-        </section>
+    <PublicShell active="explore">
+      {/* ==================== HERO ==================== */}
+      <Reveal as="section" className="relative overflow-hidden pt-32 pb-24">
+        <AmbientIcons layout="hero" />
+        <div
+          className="container"
+          style={{ textAlign: "center", maxWidth: 880, position: "relative", zIndex: 1 }}
+        >
+          <h1 className="t-display" style={{ marginBottom: "28px" }}>
+            Learn with people
+            <br />
+            who&apos;ve done it.
+          </h1>
+          <p
+            className="text-lead"
+            style={{ fontSize: 21, maxWidth: 620, margin: "0 auto 40px", color: "var(--ink-2)" }}
+          >
+            Join real learning communities led by working Nigerian engineers, founders and creatives.
+            Learn in a structured classroom, ask questions in the feed, and ship work that matters.
+          </p>
 
-        <section className="border-y border-sky-100/80 bg-[#f7fcfe]" aria-label="What makes Interlekt different">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-4 px-5 py-6 md:py-7">
-            <p className="w-full text-center font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 md:w-auto">A better way to learn, together</p>
-            <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-medium text-slate-700">
-              {TRUST_POINTS.map(({ icon: Icon, label }) => (
-                <li key={label} className="inline-flex items-center gap-2.5">
-                  <Icon className="h-[17px] w-[17px] text-sky-700" aria-hidden="true" />
-                  {label}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section id="communities" className="scroll-mt-24 mx-auto max-w-6xl px-5 py-20 md:py-24">
-          <div className="flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <p className="label-eyebrow">Explore what’s possible</p>
-              <h2 className="mt-3 font-display text-3xl tracking-tight text-slate-950 md:text-4xl">Communities to grow with</h2>
-              <p className="mt-3 max-w-xl text-slate-600">Find practical lessons, honest conversation, and people who want to see you thrive.</p>
-            </div>
-            <Button variant="outline" className="press rounded-full border-sky-200 text-sky-900 hover:bg-sky-50" asChild>
-              <Link href="/communities">Browse all <ArrowRight className="h-4 w-4" /></Link>
-            </Button>
-          </div>
-          {communitiesLoading ? (
-            <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4" aria-label="Loading live communities">
-              {Array.from({ length: 4 }, (_, i) => <div key={i} className="h-72 animate-pulse rounded-2xl border border-sky-100 bg-sky-50" />)}
-            </div>
-          ) : communitiesError ? (
-            <div role="alert" className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
-              <p>Communities could not be loaded from the backend right now.</p>
-              <button type="button" onClick={() => void refetch()} className="mt-2 font-semibold underline underline-offset-2">Retry community list</button>
-            </div>
-          ) : communities.length ? (
-            <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {communities.map((community) => (
-                <article key={community.id}>
-                  <CommunityCard community={community} />
-                  <CommunityRating community={community} />
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-8 rounded-2xl border border-dashed border-sky-200 bg-sky-50/70 px-6 py-10 text-center">
-              <p className="font-semibold text-slate-900">No published communities yet</p>
-              <p className="mt-2 text-sm text-slate-600">New communities will appear here once creators publish them.</p>
-            </div>
-          )}
-        </section>
-
-        <section id="how-it-works" className="scroll-mt-24 border-y border-sky-100/80 bg-[#f7fcfe]">
-          <div className="mx-auto max-w-6xl px-5 py-20 md:py-24">
-            <p className="label-eyebrow">Your next step starts here</p>
-            <h2 className="mt-3 max-w-2xl font-display text-3xl tracking-tight text-slate-950 md:text-4xl">From curious to confident—together.</h2>
-            <ol className="mt-10 grid gap-5 md:grid-cols-3">
-              {STEPS.map(({ icon: Icon, title, text }, index) => (
-                <li key={title} className="lift rounded-2xl border border-sky-100 bg-white p-6 md:p-7">
-                  <div className="flex items-center justify-between">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e4f7fc] text-sky-800"><Icon className="h-5 w-5" aria-hidden="true" /></span>
-                    <span className="font-mono text-xs font-medium tracking-wider text-slate-400">0{index + 1}</span>
-                  </div>
-                  <h3 className="mt-6 text-lg font-semibold text-slate-950">{title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">{text}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section id="creators" className="scroll-mt-24 mx-auto max-w-6xl px-5 py-20 md:py-24">
-          <div className="grid overflow-hidden rounded-[28px] bg-[#082f4a] md:grid-cols-[1.08fr_.92fr]">
-            <div className="p-8 md:p-12 lg:p-14">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a9e4f2]">For the ones who teach</p>
-              <h2 className="mt-4 max-w-xl font-display text-3xl tracking-tight text-white md:text-4xl">Turn what you know into a community that grows.</h2>
-              <p className="mt-4 max-w-lg leading-7 text-sky-100/80">Share your experience, build a home for learners, and set a community price in naira.</p>
-              <Button size="lg" className="press mt-8 rounded-full bg-[#b5e5f1] px-6 text-[#073451] hover:bg-[#d1f0f7]" asChild>
-                <Link href="/auth/register">Start teaching <ArrowRight className="h-4 w-4" /></Link>
-              </Button>
-            </div>
-            <div className="flex flex-col justify-center gap-3 bg-white/[0.045] p-7 md:p-10">
-              {[
-                ["Set your price", "Choose the price shown on your community listing."],
-                ["See your progress", "Track your community and its members."],
-                ["Get discovered", "Build trust with a verified profile and community ratings when available."],
-              ].map(([title, description]) => (
-                <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
-                  <p className="font-semibold text-white">{title}</p>
-                  <p className="mt-1 text-sm leading-6 text-sky-100/70">{description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-5 py-16 md:py-20">
-          <div className="rounded-[28px] border border-sky-100 bg-[#eaf8fc] px-6 py-12 text-center md:px-12 md:py-16">
-            <p className="label-eyebrow">Your people are out there</p>
-            <h2 className="mx-auto mt-3 max-w-2xl font-display text-3xl tracking-tight text-slate-950 md:text-4xl">Make room for what you want to learn next.</h2>
-            <p className="mx-auto mt-4 max-w-xl leading-7 text-slate-600">Join a community led by someone who’s been where you want to go.</p>
-            <Link href="/communities" className="press mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#b5e5f1] px-7 font-semibold text-[#073451] hover:bg-[#a6dff0]">
-              Find your community <ArrowRight className="h-4 w-4" />
+          <div className="flex flex-wrap justify-center" style={{ gap: 12 }}>
+            <Link className="btn btn-primary btn-pill btn-lg" href="/auth/register">
+              Get started — free
+              <Icon name="arrowRight" size={18} />
+            </Link>
+            <Link className="btn btn-secondary btn-pill btn-lg" href="/communities">
+              Browse communities
             </Link>
           </div>
-        </section>
-      </main>
-      <SiteFooter />
-    </div>
+
+          {/* Search — a real GET form against /search */}
+          <div style={{ maxWidth: 560, margin: "64px auto 0" }}>
+            <SearchField
+              action="/search"
+              label="Search communities"
+              placeholder="Search communities, mentors, skills…"
+              trailing={
+                <button
+                  className="btn btn-primary"
+                  type="submit"
+                  style={{ margin: 8, height: 40, borderRadius: "var(--r-sm)" }}
+                >
+                  Search
+                </button>
+              }
+            />
+
+            <div
+              className="flex flex-wrap items-center justify-center"
+              style={{ gap: 8, marginTop: 16 }}
+            >
+              <span className="text-xs muted">Popular:</span>
+              {categoriesLoading
+                ? Array.from({ length: 4 }, (_, index) => (
+                    <span key={index} className="skeleton" style={{ width: 110, height: 28 }} />
+                  ))
+                : categories.slice(0, 5).map((category) => (
+                    <Link
+                      key={category.id}
+                      className="chip chip-sm"
+                      href={`/communities?category=${encodeURIComponent(category.slug)}`}
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+            </div>
+          </div>
+        </div>
+      </Reveal>
+
+      {/* ==================== TRUST STRIP ==================== */}
+      <Reveal as="section" className="pt-8 pb-24">
+        <div className="container">
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 32,
+              textAlign: "center",
+              padding: "32px 0",
+              borderTop: "1px solid var(--line)",
+              borderBottom: "1px solid var(--line)",
+            }}
+          >
+            <div>
+              <div
+                className="text-money"
+                style={{ fontSize: 36, color: "var(--ink)", fontWeight: 600, letterSpacing: "-0.02em" }}
+              >
+                {communitiesLoading ? "—" : totalCommunities.toLocaleString()}
+              </div>
+              <div className="text-sm muted" style={{ marginTop: 4 }}>
+                Live communities
+              </div>
+            </div>
+            <div>
+              <div
+                className="text-money"
+                style={{ fontSize: 36, color: "var(--ink)", fontWeight: 600, letterSpacing: "-0.02em" }}
+              >
+                {categoriesLoading ? "—" : categories.length.toLocaleString()}
+              </div>
+              <div className="text-sm muted" style={{ marginTop: 4 }}>
+                Learning categories
+              </div>
+            </div>
+          </div>
+        </div>
+      </Reveal>
+
+      {/* ==================== COMMUNITIES ==================== */}
+      <Reveal as="section" className="pt-8 pb-24">
+        <div className="container">
+          <div
+            className="flex flex-wrap items-end justify-between"
+            style={{ gap: 24, marginBottom: 48 }}
+          >
+            <div>
+              <h2 className="h2" style={{ marginBottom: 8 }}>
+                Popular communities
+              </h2>
+              <p className="text-body muted" style={{ color: "var(--ink-3)" }}>
+                Real communities led by working professionals. Pricing in naira.
+              </p>
+            </div>
+            <Link className="btn btn-secondary btn-pill" href="/communities">
+              Explore all
+              <Icon name="arrowRight" size={16} />
+            </Link>
+          </div>
+
+          {communitiesLoading ? (
+            <div className="grid grid-3" style={{ gap: 24 }} aria-label="Loading communities">
+              {Array.from({ length: 6 }, (_, index) => (
+                <div key={index} className="skeleton" style={{ height: 320 }} />
+              ))}
+            </div>
+          ) : communitiesError ? (
+            <Alert variant="danger" icon="alertCircle" title="Communities could not be loaded">
+              <p style={{ marginBottom: 12 }}>
+                We couldn&apos;t reach the community service. Check your connection and try again.
+              </p>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => void refetch()}
+              >
+                Retry community list
+              </button>
+            </Alert>
+          ) : communities.length === 0 ? (
+            <EmptyState
+              icon="users"
+              title="No published communities yet"
+              description="New communities appear here as soon as creators publish them. Check back soon."
+              action={{ label: "Browse all communities", href: "/communities" }}
+            />
+          ) : (
+            <div className="grid grid-3" style={{ gap: 24 }}>
+              {communities.map((community) => (
+                <CommunityCard key={community.id} community={community} />
+              ))}
+            </div>
+          )}
+        </div>
+      </Reveal>
+
+      {/* ==================== CATEGORIES ==================== */}
+      <Reveal as="section" className="pt-8 pb-24">
+        <div className="container">
+          <h2 className="h2" style={{ marginBottom: 8, textAlign: "center" }}>
+            Browse by what you want to learn
+          </h2>
+          <p className="text-body muted" style={{ color: "var(--ink-3)", marginBottom: 40, textAlign: "center" }}>
+            Every category is a real filter over the live directory.
+          </p>
+          <div
+            className="flex flex-wrap justify-center"
+            style={{ gap: 10, maxWidth: 920, margin: "0 auto" }}
+          >
+            {categoriesLoading
+              ? Array.from({ length: 8 }, (_, index) => (
+                  <span key={index} className="skeleton" style={{ width: 160, height: 36 }} />
+                ))
+              : categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    className="chip"
+                    href={`/communities?category=${encodeURIComponent(category.slug)}`}
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+          </div>
+        </div>
+      </Reveal>
+
+      {/* ==================== CREATOR PITCH (the one dark band) ==================== */}
+      <Reveal as="section" className="section-dark py-32">
+        <div className="container" style={{ maxWidth: 1080 }}>
+          <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 80px" }}>
+            <h2 className="t-display-sm" style={{ marginBottom: 24 }}>
+              Teach what you know.
+              <br />
+              Build a room around it.
+            </h2>
+            <p className="text-lead" style={{ maxWidth: 580, margin: "0 auto 40px" }}>
+              Turn what you know into a structured learning community: a curriculum, a classroom, a feed,
+              and a price in naira that learners can see before they join.
+            </p>
+            <div className="flex flex-wrap justify-center" style={{ gap: 12 }}>
+              <Link
+                className="btn btn-lg btn-pill bg-warning text-ink hover:opacity-90"
+                href="/auth/register"
+              >
+                Become a creator
+                <Icon name="arrowRight" size={18} />
+              </Link>
+              <Link className="btn btn-inverse btn-pill btn-lg" href="/communities">
+                See live communities
+              </Link>
+            </div>
+          </div>
+
+          <div
+            className="grid grid-3"
+            style={{
+              gap: 24,
+              maxWidth: 880,
+              margin: "0 auto",
+              padding: "48px 0",
+              borderTop: "1px solid var(--line-dark)",
+              borderBottom: "1px solid var(--line-dark)",
+            }}
+          >
+            {CREATOR_POINTS.map((point) => (
+              <div key={point.title} style={{ textAlign: "center" }}>
+                <p
+                  className="text-money"
+                  style={{ fontSize: 19, color: "#fff", fontWeight: 600, marginBottom: 8 }}
+                >
+                  {point.title}
+                </p>
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+                  {point.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+
+      {/* ==================== HOW IT WORKS ==================== */}
+      <Reveal as="section" className="pt-32 pb-24">
+        <div className="container">
+          <h2 className="h2" style={{ textAlign: "center", marginBottom: 8 }}>
+            How it works
+          </h2>
+          <p className="text-body muted" style={{ color: "var(--ink-3)", textAlign: "center", marginBottom: 64 }}>
+            Three steps. No friction.
+          </p>
+
+          <div className="grid grid-3" style={{ gap: 32 }}>
+            {STEPS.map((step, index) => (
+              <div key={step.title} style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: 56,
+                    fontWeight: 600,
+                    color: "var(--ink-3)",
+                    letterSpacing: "-0.02em",
+                    marginBottom: 16,
+                    lineHeight: 1,
+                  }}
+                >
+                  {index + 1}
+                </div>
+                <h3 className="h4" style={{ marginBottom: 12 }}>
+                  {step.title}
+                </h3>
+                <p className="text-sm muted" style={{ color: "var(--ink-3)", maxWidth: 280, margin: "0 auto" }}>
+                  {step.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+
+      {/* ==================== FINAL CTA ==================== */}
+      <Reveal as="section" className="pt-16 pb-32">
+        <div className="container" style={{ textAlign: "center", maxWidth: 720 }}>
+          <h2 className="h1" style={{ marginBottom: 20 }}>
+            Start learning from people who&apos;ve done it.
+          </h2>
+          <p className="text-lead" style={{ color: "var(--ink-3)", marginBottom: 40 }}>
+            Create an account to join communities, work through lessons and keep your progress on your
+            own dashboard.
+          </p>
+          <div className="flex flex-wrap justify-center" style={{ gap: 12 }}>
+            <Link className="btn btn-primary btn-pill btn-lg" href="/auth/register">
+              Get started — free
+              <Icon name="arrowRight" size={18} />
+            </Link>
+            <Link className="btn btn-secondary btn-pill btn-lg" href="/communities">
+              Browse communities
+            </Link>
+          </div>
+        </div>
+      </Reveal>
+    </PublicShell>
   );
 }

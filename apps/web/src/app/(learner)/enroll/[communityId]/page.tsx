@@ -78,11 +78,26 @@ function EnrollFlow({ community, signedIn }: { community: CommunityDetail; signe
               <Button className="mt-5" asChild><Link href={`/communities/${community.slug}/classroom`}>Go to classroom now</Link></Button>
             </div>
           ) : paidBlocked ? (
-            <div className="flex flex-col items-center rounded-2xl bg-amber-50 px-5 py-8 text-center">
-              <AlertCircle className="h-10 w-10 text-amber-700" aria-hidden="true" />
-              <p className="mt-3 font-semibold text-slate-950">Online payment isn&apos;t live yet</p>
-              <p className="mt-1 max-w-sm text-sm leading-6 text-slate-600">{enrollErrorMessage(error)}</p>
-              <Button variant="outline" className="mt-5 bg-white" asChild><Link href="/communities">Browse free communities</Link></Button>
+            <div className="flex flex-col items-center rounded-2xl bg-slate-900 text-white p-6 sm:p-8 text-center border border-slate-800">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-500/20 text-sky-400 mb-3">
+                <ShieldCheck className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <p className="text-xl font-bold tracking-tight text-white">Cohort Enrollment Opening Soon</p>
+              <p className="mt-2 max-w-md text-sm text-slate-300 leading-relaxed">
+                Paid enrollments for this community are currently reserved for the upcoming cohort. You will receive an immediate invitation once classroom slots open.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                <Button className="btn-primary" asChild>
+                  <Link href={`/communities/${community.slug}`}>
+                    Return to community
+                  </Link>
+                </Button>
+                <Button variant="secondary" asChild>
+                  <Link href="/communities">
+                    Explore communities
+                  </Link>
+                </Button>
+              </div>
             </div>
           ) : !signedIn ? (
             <div className="flex flex-col items-center rounded-2xl bg-sky-50/70 px-5 py-8 text-center">

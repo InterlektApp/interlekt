@@ -1,162 +1,238 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { ArrowRight, Search, Sparkles, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { CommunityCard } from "@/components/community-card";
-import { PageNav } from "@/components/page-nav";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
-import { useCommunities } from "@/hooks/use-communities";
-import type { CommunityListItem } from "@/types/api";
+import { PublicShell } from "@/components/public/public-shell";
+import { SearchField } from "@/components/public/search-field";
+import { FilterSidebar, type CommunitySort } from "@/components/public/filter-sidebar";
+import { CommunityCard } from "@/components/ui/content-cards";
+import { Pagination } from "@/components/ui/data-display";
+import { Alert, EmptyState } from "@/components/ui/feedback";
+import { Icon } from "@/components/ui/icon";
+import { Reveal } from "@/components/ui/motion";
+import { useCategories, useCommunities } from "@/hooks/use-communities";
 
-function CommunityRating({ community }: { community: CommunityListItem }) {
-  const summary = community as CommunityListItem & { rating?: number | null; reviewCount?: number };
-  const rating = summary.rating ?? null;
-  const count = summary.reviewCount ?? 0;
-  return (
-    <p className="inline-flex items-center gap-1.5 px-1 text-xs text-slate-600" aria-label={count > 0 && rating !== null ? `${rating.toFixed(1)} out of 5 from ${count} ${count === 1 ? "rating" : "ratings"}` : "No ratings yet"}>
-      <Star className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
-      {count > 0 && rating !== null ? `${rating.toFixed(1)} · ${count} ${count === 1 ? "rating" : "ratings"}` : "No ratings yet"}
-    </p>
-  );
+/**
+ * A8 — search results.
+ *
+ * `GET /communities?search=` is the only search endpoint that exists, so
+ * the results are communities only. There is no creator search and no
+ * lesson search yet, so those tabs are not shown.
+ */
+
+const SORT_VALUES: CommunitySort[] = ["newest", "most_members", "alphabetical"];
+
+function parseSort(value: string | null): CommunitySort {
+  return SORT_VALUES.includes(value as CommunitySort) ? (value as CommunitySort) : "most_members";
 }
 
 function SearchInner() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const q = searchParams.get("q") ?? "";
-  const searchTerm = q.trim();
-  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+  const rawQuery = searchParams.get("q") ?? "";
+  const query = rawQuery.trim();
+  const category = searchParams.get("category") ?? "all";
+  const page = Math.max(1, Number.parseInt(searchParams.get("page") ?? "1", 10) || 1);
+  const sort = parseSort(searchParams.get("sort"));
 
-  // GET /communities supports `search` over community title and description.
-  // Empty query shows a prompt rather than the entire directory.
-  const { data, isLoading, isError, refetch } = useCommunities({ search: searchTerm, page, pageSize: 20 });
-  const results = searchTerm ? (data?.items ?? []) : [];
+  const { data: categories = [] } = useCategories();
+  const { data, isLoading, isError, refetch } = useCommunities({
+    search: query,
+    category,
+    sort,
+    page,
+    pageSize: 12,
+  });
+
+  const items = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
-  const baseHref = `/search?${new URLSearchParams({ q: searchTerm }).toString()}`;
+
+  const preserved: Record<string, string | undefined> = {
+    q: query || undefined,
+    sort: sort !== "most_members" ? sort : undefined,
+  };
+
+  const resultQuery: Record<string, string | undefined> = {
+    category: category !== "all" ? category : undefined,
+    q: query || undefined,
+    sort: sort !== "most_members" ? sort : undefined,
+  };
 
   return (
-    <div className="min-h-screen bg-[#f7fbfd] text-[#102f45]">
-      <SiteHeader />
+    <PublicShell active="explore">
+      {/* Header */}
+      <Reveal as="section" className="relative overflow-hidden pt-12 pb-6">
+        <div className="container" style={{ position: "relative", zIndex: 1 }}>
+          <SearchField
+            action="/search"
+            label="Search communities"
+            defaultValue={query}
+            placeholder="Search communities, mentors, skills…"
+            trailing={
+              <>
+                {category !== "all" ? <input type="hidden" name="category" value={category} /> : null}
+                {sort !== "most_members" ? <input type="hidden" name="sort" value={sort} /> : null}
+                {query ? (
+                  <Link
+                    href="/search"
+                    className="btn btn-ghost"
+                    aria-label="Clear search"
+                    style={{ marginRight: 8, height: 40, padding: "0 12px" }}
+                  >
+                    <Icon name="x" size={16} />
+                  </Link>
+                ) : null}
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ margin: 8, height: 40, borderRadius: "var(--r-sm)" }}
+                >
+                  Search
+                </button>
+              </>
+            }
+          />
 
-      <main className="mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-12">
-        <section className="mx-auto max-w-5xl rounded-[28px] border border-sky-100 bg-gradient-to-br from-white via-white to-[#eaf8fc] px-6 py-9 shadow-[0_16px_50px_-40px_rgba(9,51,76,.3)] md:px-10 md:py-12">
-          <div className="mx-auto max-w-3xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-white px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-800">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Search Interlekt
-            </p>
-            <h1 className="mt-4 font-display text-3xl tracking-tight text-[#092d46] md:text-5xl">
-              Find your thing
-            </h1>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600 md:text-lg">
-              Search community titles and descriptions to find a place to keep growing.
-            </p>
-            <form action="/search" method="get" role="search" className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <div className="relative min-w-0 flex-1">
-                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-800" aria-hidden="true" />
-                <input
-                  name="q"
-                  defaultValue={q}
-                  placeholder="Search community titles and descriptions…"
-                  aria-label="Search community titles and descriptions"
-                  className="h-12 w-full rounded-xl border border-sky-200 bg-white pl-12 pr-4 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-sky-300 focus-visible:border-sky-600 focus-visible:ring-4 focus-visible:ring-sky-100"
+          <p className="text-sm muted" style={{ marginTop: 16 }} aria-live="polite">
+            {isLoading ? (
+              "Searching…"
+            ) : isError ? (
+              "Result count unavailable"
+            ) : query ? (
+              <>
+                <span className="tnum">{total.toLocaleString()}</span>{" "}
+                {total === 1 ? "community" : "communities"} for{" "}
+                <span style={{ color: "var(--ink)", fontWeight: 500 }}>&ldquo;{query}&rdquo;</span>
+              </>
+            ) : (
+              "Enter a phrase to search the community directory."
+            )}
+          </p>
+        </div>
+      </Reveal>
+
+      {/* Sidebar + results */}
+      <Reveal as="section" className="pt-4 pb-24">
+        <div className="container">
+          <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-12">
+            <FilterSidebar
+              categories={categories}
+              activeCategory={category}
+              total={total}
+              sort={sort}
+              basePath="/search"
+              preserve={preserved}
+              className="lg:sticky lg:top-20"
+            />
+
+            <div className="min-w-0">
+              {query ? (
+                <div className="flex flex-wrap items-center justify-between" style={{ gap: 16, marginBottom: 32 }}>
+                  <div className="tabs" style={{ marginBottom: 0 }}>
+                    <div className="tab active">
+                      Communities <span className="tab-count">{total.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="search-sort" className="text-xs muted whitespace-nowrap">
+                      Sort by
+                    </label>
+                    <select
+                      id="search-sort"
+                      className="select"
+                      style={{ height: 36, width: "auto", minWidth: 140, fontSize: "var(--fs-13)" }}
+                      value={sort}
+                      onChange={(e) => {
+                        const next = new URLSearchParams(searchParams.toString());
+                        if (e.target.value === "most_members") {
+                          next.delete("sort");
+                        } else {
+                          next.set("sort", e.target.value);
+                        }
+                        next.delete("page");
+                        router.push(`/search?${next.toString()}`);
+                      }}
+                    >
+                      <option value="most_members">Popular</option>
+                      <option value="newest">Newest</option>
+                      <option value="alphabetical">A–Z</option>
+                    </select>
+                  </div>
+                </div>
+              ) : null}
+
+              {!query ? (
+                <EmptyState
+                  icon="search"
+                  title="Start with a topic you care about"
+                  description="Search community titles and descriptions above — or explore the full community directory."
+                  action={{ label: "Explore communities", href: "/communities" }}
                 />
-              </div>
-              <Button type="submit" size="lg" className="h-12 rounded-xl px-6">
-                Search
-              </Button>
-            </form>
-          </div>
-        </section>
-
-        <section className="mx-auto mt-9 max-w-5xl" aria-labelledby="search-results-title">
-          {q.trim() ? (
-            <>
-              <div className="flex flex-col gap-2 border-b border-sky-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-800">Search results</p>
-                  <h2 id="search-results-title" className="mt-1 text-xl font-semibold tracking-tight text-[#092d46] md:text-2xl">
-                    Results for “{q}”
-                  </h2>
-                </div>
-                <p className="text-sm text-slate-500" aria-live="polite">
-                  {isLoading ? "Searching…" : isError ? "Result count unavailable" : `${total.toLocaleString()} ${total === 1 ? "result" : "results"}`}
-                </p>
-              </div>
-
-              {isError ? (
-                <div role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-10 text-center text-sm text-amber-950">
-                  <p>Search could not be completed because the community service is unavailable.</p>
-                  <button type="button" onClick={() => void refetch()} className="mt-3 font-semibold underline underline-offset-2">Retry search</button>
-                </div>
+              ) : isError ? (
+                <Alert variant="danger" icon="alertCircle" title="Search could not be completed">
+                  <p style={{ marginBottom: 12 }}>
+                    The community service didn&apos;t respond. Please try again.
+                  </p>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => void refetch()}>
+                    Retry search
+                  </button>
+                </Alert>
               ) : isLoading ? (
-                <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {Array.from({ length: 3 }, (_, i) => (
-                    <div key={i} className="h-72 animate-pulse rounded-2xl border border-sky-100 bg-white" />
+                <div className="grid grid-3" style={{ gap: 24 }} aria-label="Loading results">
+                  {Array.from({ length: 6 }, (_, index) => (
+                    <div key={index} className="skeleton" style={{ height: 320 }} />
                   ))}
                 </div>
-              ) : results.length > 0 ? (
+              ) : items.length === 0 && total > 0 ? (
+                <div className="card">
+                  <p className="text-body" style={{ color: "var(--ink-2)" }}>
+                    There are no search results on page {page}.
+                  </p>
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    baseHref="/search"
+                    query={resultQuery}
+                    className="mt-6"
+                  />
+                </div>
+              ) : items.length === 0 ? (
+                <EmptyState
+                  icon="search"
+                  title={`Nothing matched “${query}”`}
+                  description="Try another phrase, or browse the full directory to discover something new."
+                  action={{ label: "Browse communities", href: "/communities" }}
+                />
+              ) : (
                 <>
-                  <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {results.map((c) => (
-                      <article key={c.id}>
-                        <CommunityCard community={c} />
-                        <CommunityRating community={c} />
-                      </article>
+                  <div className="grid grid-3" style={{ gap: 24 }}>
+                    {items.map((community) => (
+                      <CommunityCard key={community.id} community={community} />
                     ))}
                   </div>
-                  <PageNav page={page} pages={totalPages} total={total} baseHref={baseHref} className="mt-4 border-t border-sky-100" />
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    baseHref="/search"
+                    query={resultQuery}
+                    className="mt-16"
+                  />
                 </>
-              ) : total > 0 ? (
-                <div className="mt-5 rounded-2xl border border-sky-100 bg-white px-6 py-10 text-center">
-                  <p className="text-sm text-slate-600">There are no search results on page {page}.</p>
-                  <PageNav page={page} pages={totalPages} total={total} baseHref={baseHref} className="mt-4 border-t border-sky-100" />
-                </div>
-              ) : (
-                <div className="mt-5 rounded-2xl border border-sky-100 bg-white px-6 py-14 text-center shadow-sm md:px-12">
-                  <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e5f6fb] text-sky-800">
-                    <Search className="h-6 w-6" aria-hidden="true" />
-                  </span>
-                  <p className="mt-4 text-lg font-semibold text-[#092d46]">Nothing matched “{q}”</p>
-                  <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-                    Try another phrase or browse all communities to discover something new.
-                  </p>
-                  <Button variant="outline" className="mt-5 rounded-full border-sky-200 text-sky-900 hover:bg-sky-50" asChild>
-                    <Link href="/communities">
-                      Browse communities <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </Link>
-                  </Button>
-                </div>
               )}
-            </>
-          ) : (
-            <div className="rounded-2xl border border-sky-100 bg-white px-6 py-10 text-center shadow-sm md:px-10">
-              <p id="search-results-title" className="text-lg font-semibold text-[#092d46]">Start with a topic you care about</p>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-                Enter a community title or description above — or explore the full community directory.
-              </p>
-              <Button variant="outline" className="mt-5 rounded-full border-sky-200 text-sky-900 hover:bg-sky-50" asChild>
-                <Link href="/communities">
-                  Explore communities <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
             </div>
-          )}
-        </section>
-      </main>
-
-      <SiteFooter />
-    </div>
+          </div>
+        </div>
+      </Reveal>
+    </PublicShell>
   );
 }
 
 export default function SearchPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<div className="page" aria-busy="true" />}>
       <SearchInner />
     </Suspense>
   );

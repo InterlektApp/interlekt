@@ -28,18 +28,26 @@ interlekt/                       # Frontend repo (this one)
 │   └── web/                  # Next.js frontend
 ├── docs/
 │   ├── PRD.md                # The product requirements document (source of truth)
-│   ├── architecture.md       # Original technical design (see note below)
-│   └── skool-research.md     # What we learned studying Skool's feature set
-├── .opencode/
-│   └── skills/               # ui-ux-pro-max bundle (design intelligence, local data)
-└── Interlekt_Project_Requirements_Document.docx   # Original PRD, for reference
+│   ├── skool-research.md     # What we learned studying Skool's feature set
+│   ├── design/               # UI redesign system (design.md + stitch-prompts.md)
+│   └── archive/              # Original docs kept for reference:
+│       ├── Interlekt_Project_Requirements_Document.docx   # original Word PRD
+│       └── architecture.md   # ⚠️ out-of-date tech design (see note below)
+├── package.json
+├── pnpm-workspace.yaml
+├── pnpm-lock.yaml
+└── README.md
 ```
+
+> **Skills note:** agent skill bundles (ui-ux-pro-max etc.) live in the **global**
+> OpenCode config (`~/.config/opencode/skills`), not in this repo — `.opencode/`
+> is gitignored on purpose.
 
 > **Two repos, one product.** The backend lives in `InterlektApp/Interlekt-backend`
 > (Python + FastAPI + PostgreSQL) and it is authoritative for the API contract.
 > This repo is frontend-only — there is no `apps/api` here, and there shouldn't be.
 >
-> **Spec note:** `docs/architecture.md` was written before the backend team
+> **Spec note:** `docs/archive/architecture.md` was written before the backend team
 > finalized their contract, and the two diverge in places that matter: the real
 > API speaks **camelCase** (not snake_case), auth is **Bearer tokens in the
 > response body** (not httpOnly cookies), money arrives as **decimal strings**

@@ -123,4 +123,7 @@ export const post = <T>(path: string, body?: unknown, opts?: RequestOptions) =>
   api<T>(path, { ...opts, method: "POST", body });
 export const patch = <T>(path: string, body?: unknown, opts?: RequestOptions) =>
   api<T>(path, { ...opts, method: "PATCH", body });
+/** `PUT` is used by `PUT /creators/me`. */
+export const put = <T>(path: string, body?: unknown, opts?: RequestOptions) =>
+  api<T>(path, { ...opts, method: "PUT", body });
 export const del = <T>(path: string, opts?: RequestOptions) => api<T>(path, { ...opts, method: "DELETE" });
