@@ -32,7 +32,7 @@ export interface FilterSidebarProps {
   categories: Category[];
   activeCategory: string;
   /** Total published communities — the only count the API exposes. */
-  total: number;
+  total?: number;
   sort: CommunitySort;
   /** Path the filters navigate within, e.g. "/communities" or "/search". */
   basePath: string;
@@ -103,7 +103,7 @@ export function FilterSidebar({
               aria-current={activeCategory === "all" ? "page" : undefined}
             >
               <span>All categories</span>
-              <span className="text-xs muted tnum">{total.toLocaleString()}</span>
+              {total !== undefined ? <span className="text-xs muted tnum">{total.toLocaleString()}</span> : null}
             </Link>
           </li>
           {categories.map((category) => {

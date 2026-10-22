@@ -52,9 +52,9 @@ function CreatorLoginScreen() {
 
       <div className="text-center" style={{ marginTop: 28 }}>
         <p className="text-sm muted">
-          Want to become a creator?{" "}
-          <Link href="/onboarding" style={{ color: "var(--accent)" }}>
-            Apply here
+          Need a creator account?{" "}
+          <Link href="/auth/register" style={{ color: "var(--accent)" }}>
+            Create one here
           </Link>
         </p>
       </div>

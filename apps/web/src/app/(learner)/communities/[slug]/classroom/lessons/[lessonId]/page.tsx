@@ -6,7 +6,7 @@ import { useQueries } from "@tanstack/react-query";
 import { Alert, Progress } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/interactive";
-import { LearnerShell, SkeletonBlock } from "@/components/learner/learner-shell";
+import { SkeletonBlock } from "@/components/learner/learner-shell";
 import { useCommunity, useCommunityCourses, useLesson, useSetLessonComplete } from "@/hooks/use-learning";
 import { get } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
@@ -64,7 +64,7 @@ export default function LessonPage({ params }: LessonPageProps) {
 
   if (lesson.isError) {
     return (
-      <LearnerShell active="classroom">
+      <>
         <main className="container py-10">
           <Alert variant="danger" title="This lesson could not be loaded">
             {apiErrorMessage(lesson.error)}{" "}
@@ -76,12 +76,12 @@ export default function LessonPage({ params }: LessonPageProps) {
             Back to classroom
           </Link>
         </main>
-      </LearnerShell>
+      </>
     );
   }
 
   return (
-    <LearnerShell active="classroom">
+    <>
       <main className="container py-8 sm:py-10">
         <nav aria-label="Breadcrumb" className="breadcrumb">
           <Link href={`/communities/${slug}`}>{community.data?.title ?? "Community"}</Link>
@@ -238,7 +238,7 @@ export default function LessonPage({ params }: LessonPageProps) {
           </aside>
         </div>
       </main>
-    </LearnerShell>
+    </>
   );
 }
 

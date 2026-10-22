@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { BrandMark, BrandWordmark } from "@/components/brand";
 import { Icon } from "@/components/ui/icon";
+import { useMe } from "@/hooks/use-auth";
 
 export interface StudioRailProps {
   active?: "home" | "new" | "transactions" | "settings" | "profile";
@@ -13,6 +14,8 @@ export interface StudioRailProps {
 }
 
 export function StudioRail({ active, communities = [], className }: StudioRailProps) {
+  const { data: me } = useMe();
+
   return (
     <aside className={cn("studio-rail", className)} aria-label="Creator studio">
       <div className="studio-rail-section">
@@ -74,18 +77,18 @@ export function StudioRail({ active, communities = [], className }: StudioRailPr
         <p className="studio-rail-label">Account</p>
         <Link
           className={cn("rail-item", active === "profile" && "active")}
-          href="/studio/settings/public-profile"
+          href={me ? `/creators/${encodeURIComponent(me.id)}` : "/onboarding"}
         >
           <Icon name="user" />
           <span>Public profile</span>
         </Link>
         <Link
           className={cn("rail-item", active === "settings" && "active")}
-          href="/studio/settings"
+          href="/onboarding"
           aria-current={active === "settings" ? "page" : undefined}
         >
           <Icon name="settings" />
-          <span>Settings</span>
+          <span>Edit profile</span>
         </Link>
       </div>
     </aside>

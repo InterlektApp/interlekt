@@ -3,19 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, get } from "@/lib/api/client";
 import { qk } from "@/lib/query-keys";
+import type { CreatorProfileResponse } from "@/types/api";
 
-/** Exact camelCase shape returned by GET/PUT /creators/me. */
-export interface CreatorProfileResponse {
-  userId: string;
-  displayName: string;
-  avatarUrl: string | null;
-  bio: string | null;
-  expertise: string[];
-  verificationStatus: "pending" | "verified" | "rejected";
-  isVerified: boolean;
-  communityCount: number;
-  createdAt: string;
-}
+export type { CreatorProfileResponse };
 
 export interface CreatorProfileUpdate {
   expertise: string[];

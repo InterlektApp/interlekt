@@ -1,7 +1,7 @@
 # Mapping — Public shell (24 screens)
 
 > Source of truth: `backend-openapi.json` (47 paths) + live probes against
-> `https://interlekt-backend.onrender.com/api/v1` on 2026-10-21.
+> `https://interlekt-backend.onrender.com/api/v1` on 2026-10-22.
 > Frontend conventions verified in `apps/web/src/` (Next 15 App Router, TanStack Query,
 > `API_BASE = "/api/v1"` via `next.config.ts` rewrites, `Authorization: Bearer <accessToken>`,
 > tokens in `localStorage` — **no cookies**).
@@ -37,7 +37,7 @@
 | **`GET /communities/{slug}/reviews` (anon)** | **401** → A3 review list + A3/A4 rating breakdown are not public. |
 | **`GET /communities/{slug}/members` (anon)** | **401** → A3 member avatar-stack is not public. |
 | **`GET /communities/{slug}/posts` (anon)** | **401** → A3 Feed tab + A24 are not public. |
-| `GET /creators/{user_id}` (anon) | 200. Returns `userId,displayName,avatarUrl,bio,expertise[],verificationStatus,isVerified,communityCount,createdAt`. **No `memberCount`, no headline/location, no rating.** |
+| `GET /creators/{user_id}` (anon) | OpenAPI 200 schema includes `userId,displayName,avatarUrl,bio,headline,coverUrl,socialLinks,expertise[],verificationStatus,isVerified,communityCount,memberCount,createdAt`. `memberCount` is required; headline, cover and social links are optional. Location and rating are absent. |
 | `GET /users/{user_id}` (anon) | 200. `id,displayName,avatarUrl,bio,roles[],isCreator,createdAt`. |
 | `GET /categories` (anon) | 200. **8 categories**, each with `id,name,slug,description`. **No counts.** |
 | `GET /communities?category=&sort=&search=&page=&pageSize=` | 200. `sort` ∈ `newest｜most_members｜alphabetical`. **No `creatorId`, no `isFree`, no `minRating`, no price/rating sort.** |
@@ -64,12 +64,10 @@
 | A23 | `/creators/auth/login` | **No route** | **NEW route** (thin wrapper over A5) |
 | A24 | `/discussions` | **No route** | **NEW route + NEW backend** |
 
-**Frontend type bugs found while mapping** (`apps/web/src/types/api.ts`):
-1. `CreatorProfileResponse` declares `memberCount: number` — **the live API does not return it** (probed).
-2. `CommunityListItem` / `CommunityDetail` **omit** `rating` and `reviewCount`, which the backend *does* return — so
-   `page.tsx`, `communities/page.tsx` and `search/page.tsx` all cast to `& { rating?: number|null; reviewCount?: number }`
-   to read fields that are already in the contract. Add them properly; delete the casts.
-3. `types/api.ts` is missing 40+ schemas the redesign needs (Review, Post, Comment, Course, Module, Lesson, Progress).
+**Contract recheck — 2026-10-22** (`apps/web/src/types/api.ts`):
+- The public directory contract still uses `category`, `sort`, `page`, `pageSize`, and `search`, with a flat paginated `CommunityListItem` response. The frontend query names, sort values, and response envelope match.
+- The deployed OpenAPI advertises 200/422 for `GET /api/v1/communities`; a live request currently returns 500 `internal_error`, so directory data cannot load until the backend is repaired.
+- `CreatorProfileResponse` now requires `memberCount`; `headline`, `coverUrl`, and `socialLinks` are optional. The frontend type and public creator stats now use this contract.
 
 ---
 

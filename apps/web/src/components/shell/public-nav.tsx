@@ -11,7 +11,7 @@ export interface PublicNavProps {
   active?: "explore" | "creators" | "about" | "help";
   signedIn?: boolean;
   isCreator?: boolean;
-  user?: { displayName: string; email: string; avatarUrl: string | null };
+  user?: { id: string; displayName: string; email: string; avatarUrl: string | null };
 }
 
 const LINKS = [
@@ -22,6 +22,10 @@ const LINKS = [
 ] as const;
 
 export function PublicNav({ active, signedIn, isCreator, user }: PublicNavProps) {
+  const links = isCreator
+    ? LINKS.map((link) => (link.id === "creators" ? { ...link, label: "Studio", href: "/studio" } : link))
+    : LINKS;
+
   return (
     <header className="nav-top">
       <div className="nav-top-inner">
@@ -30,7 +34,7 @@ export function PublicNav({ active, signedIn, isCreator, user }: PublicNavProps)
           <BrandWordmark />
         </Link>
         <nav className="nav-links" aria-label="Primary">
-          {LINKS.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.id}
               href={link.href}
@@ -52,6 +56,7 @@ export function PublicNav({ active, signedIn, isCreator, user }: PublicNavProps)
                 name={user.displayName}
                 email={user.email}
                 avatarUrl={user.avatarUrl}
+                userId={user.id}
                 isCreator={isCreator}
               />
             </>

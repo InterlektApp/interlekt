@@ -67,7 +67,7 @@ export default function RegisterPage() {
       },
       {
         onSuccess: (user) => {
-          router.replace(user.roles.includes("creator") ? "/onboarding" : "/dashboard");
+          router.replace(user.roles.includes("creator") ? "/studio" : "/dashboard");
         },
         onError: (error) => {
           const fieldErrors = apiErrorToFormErrors(error);

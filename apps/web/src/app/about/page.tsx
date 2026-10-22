@@ -217,7 +217,7 @@ export default function AboutPage() {
               Get started — free
               <Icon name="arrowRight" size={18} />
             </Link>
-            <Link className="btn btn-secondary btn-pill btn-lg" href="/onboarding">
+            <Link className="btn btn-secondary btn-pill btn-lg" href="/auth/register">
               Become a creator
             </Link>
           </div>

@@ -63,7 +63,9 @@ function ExploreInner() {
           <p className="text-lead" style={{ color: "var(--ink-3)", maxWidth: 620, marginBottom: 40 }}>
             {isLoading
               ? "Loading the live directory…"
-              : `${total.toLocaleString()} live ${total === 1 ? "community" : "communities"} led by working professionals. Filter by what you want to learn.`}
+              : isError
+                ? "The live directory is temporarily unavailable. Please try again shortly."
+                : `${total.toLocaleString()} live ${total === 1 ? "community" : "communities"} led by working professionals. Filter by what you want to learn.`}
           </p>
 
           <SearchField
@@ -95,7 +97,7 @@ function ExploreInner() {
             <FilterSidebar
               categories={categories}
               activeCategory={category}
-              total={total}
+              total={isError ? undefined : total}
               sort={sort}
               basePath="/communities"
               preserve={preserved}
@@ -110,7 +112,9 @@ function ExploreInner() {
                 <p className="text-sm muted" aria-live="polite">
                   {isLoading
                     ? "Finding communities…"
-                    : `Showing ${items.length} of ${total.toLocaleString()} ${total === 1 ? "community" : "communities"}`}
+                    : isError
+                      ? "Community results are unavailable"
+                      : `Showing ${items.length} of ${total.toLocaleString()} ${total === 1 ? "community" : "communities"}`}
                 </p>
 
                 <div className="flex items-center gap-2">

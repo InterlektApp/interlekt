@@ -87,7 +87,13 @@ export function SignInForm({ role = "any", nextHref }: SignInFormProps) {
           }
           if (values.remember === false) forgetRefreshToken();
 
-          router.replace(nextHref ?? (isCreator ? "/onboarding" : "/dashboard"));
+          const roleSafeNext = nextHref && (
+            isCreator
+              ? /^\/(?:studio(?:\/|$)|onboarding(?:\/|$))/.test(nextHref)
+              : /^\/(?:dashboard|my-communities|settings|profile|enroll|communities)(?:\/|$)/.test(nextHref)
+          );
+          const destination = roleSafeNext && nextHref ? nextHref : isCreator ? "/studio" : "/dashboard";
+          router.replace(destination);
         },
         onError: (error) => {
           const fieldErrors = apiErrorToFormErrors(error);

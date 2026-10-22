@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useMe } from "@/hooks/use-auth";
 import { LearnerNav } from "@/components/shell/learner-nav";
@@ -18,11 +19,18 @@ export interface LearnerShellProps {
  */
 export function LearnerShell({ active, children }: LearnerShellProps) {
   const { data: me } = useMe();
+  const pathname = usePathname();
+  const current = active ?? (
+    pathname.startsWith("/dashboard") ? "dashboard" :
+    pathname.startsWith("/my-communities") ? "learning" :
+    pathname.includes("/classroom") ? "classroom" :
+    pathname.startsWith("/communities") ? "explore" : undefined
+  );
 
   return (
     <div className="page">
       <LearnerNav
-        active={active}
+        active={current}
         user={
           me ? { displayName: me.displayName, email: me.email, avatarUrl: me.avatarUrl } : undefined
         }

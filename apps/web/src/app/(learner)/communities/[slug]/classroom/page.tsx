@@ -6,7 +6,7 @@ import { useQueries } from "@tanstack/react-query";
 import { Alert, Progress } from "@/components/ui/feedback";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LearnerShell, SkeletonBlock, buildLessonTree } from "@/components/learner/learner-shell";
+import { SkeletonBlock, buildLessonTree } from "@/components/learner/learner-shell";
 import { useCommunity, useCommunityCourses } from "@/hooks/use-learning";
 import { get } from "@/lib/api/client";
 import { apiErrorMessage } from "@/lib/api/errors";
@@ -49,7 +49,7 @@ export default function ClassroomPage({ params }: ClassroomPageProps) {
   const percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
   return (
-    <LearnerShell active="classroom">
+    <>
       <main className="container py-8 sm:py-10">
         <nav aria-label="Breadcrumb" className="breadcrumb">
           <Link href={`/communities/${slug}`}>Community</Link>
@@ -221,7 +221,7 @@ export default function ClassroomPage({ params }: ClassroomPageProps) {
           </aside>
         </div>
       </main>
-    </LearnerShell>
+    </>
   );
 }
 

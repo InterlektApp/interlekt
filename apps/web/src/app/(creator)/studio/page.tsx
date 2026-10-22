@@ -11,7 +11,7 @@ import { useMyCommunities } from "@/hooks/use-communities";
 export default function StudioPage() {
   const profile = useMyCreatorProfile();
   // GET /communities/mine — empty when signed out or unreachable.
-  const { data: mine = [], isLoading } = useMyCommunities();
+  const { data: mine = [], isLoading, isError: communitiesError, error: communitiesLoadError, refetch } = useMyCommunities();
   const totalMembers = mine.reduce((n, c) => n + c.memberCount, 0);
 
   if (profile.isPending) {
@@ -80,7 +80,7 @@ export default function StudioPage() {
       <section aria-label="Studio overview" className="mt-6 grid gap-4 sm:grid-cols-3">
         <StatCard
           label="Total members"
-          value={totalMembers.toLocaleString()}
+          value={communitiesError ? "—" : totalMembers.toLocaleString()}
           className="min-h-28 border-sky-100"
         />
         <StatCard
@@ -91,7 +91,7 @@ export default function StudioPage() {
         />
         <StatCard
           label="Communities"
-          value={mine.length}
+          value={communitiesError ? "—" : mine.length}
           className="min-h-28 border-sky-100"
         />
       </section>
@@ -117,6 +117,16 @@ export default function StudioPage() {
               <div key={i} className="h-64 animate-pulse rounded-2xl border border-sky-100 bg-sky-50/70" />
             ))}
           </div>
+        ) : communitiesError ? (
+          <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+            <h3 className="font-semibold text-slate-950">Your communities could not be loaded</h3>
+            <p className="mt-2 text-sm text-slate-700">
+              {communitiesLoadError instanceof Error ? communitiesLoadError.message : "Please try again."}
+            </p>
+            <Button type="button" variant="outline" className="mt-4" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          </div>
         ) : mine.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-sky-200 bg-gradient-to-br from-sky-50/90 via-white to-cyan-50/60 px-5 py-10 text-center sm:px-10">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-sky-100 bg-white text-sky-800 shadow-sm">
@@ -124,7 +134,7 @@ export default function StudioPage() {
             </div>
             <h3 className="mt-4 text-lg font-semibold text-slate-950">No communities yet</h3>
             <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-600">
-              Create one to start teaching — or sign in with a creator account.
+              Create your first community to start teaching learners.
             </p>
             <Button className="mt-5" asChild>
               <Link href="/studio/communities/new">

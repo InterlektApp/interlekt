@@ -19,8 +19,10 @@ export default function CreatorOnboardingPage() {
   const [serverError, setServerError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (profile.data?.expertise.length) router.replace("/studio");
-  }, [profile.data, router]);
+    if (profile.data && !expertiseInput) {
+      setExpertiseInput(profile.data.expertise.join(", "));
+    }
+  }, [expertiseInput, profile.data]);
 
   const submitProfile = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,9 +61,9 @@ export default function CreatorOnboardingPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:py-16">
       <section className="rounded-2xl border border-sky-100 bg-white p-6 shadow-sm sm:p-9">
-        <p className="label-eyebrow">Creator setup · Step 1 of 1</p>
+        <p className="label-eyebrow">Creator profile</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-          Complete your creator profile
+          {profile.data?.expertise.length ? "Edit your creator profile" : "Complete your creator profile"}
         </h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
           Tell learners what you teach by adding at least one area of expertise. This profile step is required before you can create a community.
@@ -81,10 +83,6 @@ export default function CreatorOnboardingPage() {
               Try again
             </Button>
           </div>
-        ) : profile.data.expertise.length > 0 ? (
-          <p role="status" className="mt-7 text-sm text-slate-600">
-            Your creator profile is complete. Opening your studio…
-          </p>
         ) : (
           <form onSubmit={submitProfile} className="mt-7 space-y-4">
             <div>
@@ -119,7 +117,7 @@ export default function CreatorOnboardingPage() {
                   Saving profile…
                 </span>
               ) : (
-                "Save profile and continue"
+                profile.data.expertise.length ? "Save changes" : "Save profile and continue"
               )}
             </Button>
           </form>

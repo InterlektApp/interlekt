@@ -10,12 +10,13 @@ export interface AvatarMenuProps {
   name: string;
   email: string;
   avatarUrl?: string | null;
+  userId?: string;
   isCreator?: boolean;
   /** Extra links that are only rendered when the route exists. */
   notificationsHref?: string;
 }
 
-export function AvatarMenu({ name, email, avatarUrl, isCreator, notificationsHref }: AvatarMenuProps) {
+export function AvatarMenu({ name, email, avatarUrl, userId, isCreator, notificationsHref }: AvatarMenuProps) {
   const [open, setOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -52,26 +53,30 @@ export function AvatarMenu({ name, email, avatarUrl, isCreator, notificationsHre
           <div className="avatar-menu-name">{name}</div>
           <div className="avatar-menu-email">{email}</div>
         </div>
-        <Link className="avatar-menu-item" href={isCreator ? "/studio/settings/public-profile" : "/profile"} role="menuitem">
-          <Icon name="user" size={16} /> <span>Profile</span>
-        </Link>
-        <Link className="avatar-menu-item" href={isCreator ? "/studio/settings" : "/settings"} role="menuitem">
-          <Icon name="settings" size={16} /> <span>Settings</span>
-        </Link>
+        {isCreator ? (
+          <>
+            <Link className="avatar-menu-item" href="/studio" role="menuitem">
+              <Icon name="home" size={16} /> <span>Creator Studio</span>
+            </Link>
+            <Link className="avatar-menu-item" href="/onboarding" role="menuitem">
+              <Icon name="user" size={16} /> <span>Edit creator profile</span>
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link className="avatar-menu-item" href="/profile" role="menuitem">
+              <Icon name="user" size={16} /> <span>Profile</span>
+            </Link>
+            <Link className="avatar-menu-item" href="/settings" role="menuitem">
+              <Icon name="settings" size={16} /> <span>Settings</span>
+            </Link>
+          </>
+        )}
         {notificationsHref ? (
           <Link className="avatar-menu-item" href={notificationsHref} role="menuitem">
             <Icon name="bell" size={16} /> <span>Notifications</span>
           </Link>
         ) : null}
-        {isCreator ? (
-          <Link className="avatar-menu-item" href="/dashboard" role="menuitem">
-            <Icon name="home" size={16} /> <span>Learner view</span>
-          </Link>
-        ) : (
-          <Link className="avatar-menu-item" href="/studio" role="menuitem">
-            <Icon name="briefcase" size={16} /> <span>Switch to Studio</span>
-          </Link>
-        )}
         <div className="avatar-menu-divider" />
         <Link className="avatar-menu-item danger" href="/logout" role="menuitem">
           <Icon name="logOut" size={16} /> <span>Sign out</span>

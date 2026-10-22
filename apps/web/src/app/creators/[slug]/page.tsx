@@ -70,7 +70,6 @@ export default function CreatorPage({ params }: CreatorPageProps) {
   const communities = (list?.items ?? []).filter(
     (community) => community.creator.userId === creator?.userId,
   );
-  const listedMembers = communities.reduce((sum, community) => sum + community.memberCount, 0);
 
   // The slug lookup has to finish before the creator fetch can start.
   const lookupDone = isUuid || resolvedId !== undefined || lookupFailed;
@@ -194,18 +193,13 @@ export default function CreatorPage({ params }: CreatorPageProps) {
             </div>
             <div className="stat-meta">Published on Interlekt</div>
           </div>
-          {communities.length > 0 ? (
-            <div className="card">
-              <div className="stat-label">Members</div>
-              <div className="stat-value" style={{ fontSize: 28, marginTop: 4 }}>
-                {listedMembers.toLocaleString()}
-              </div>
-              <div className="stat-meta">
-                Across the {communities.length} {communities.length === 1 ? "community" : "communities"} listed
-                here
-              </div>
+          <div className="card">
+            <div className="stat-label">Members</div>
+            <div className="stat-value" style={{ fontSize: 28, marginTop: 4 }}>
+              {creator.memberCount.toLocaleString()}
             </div>
-          ) : null}
+            <div className="stat-meta">Across this creator&apos;s published communities</div>
+          </div>
         </div>
 
         <div

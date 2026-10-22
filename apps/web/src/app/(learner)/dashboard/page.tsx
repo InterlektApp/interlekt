@@ -7,7 +7,7 @@ import { Alert } from "@/components/ui/feedback";
 import { Stat } from "@/components/ui/data-display";
 import { Progress } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
-import { LearnerShell, SkeletonBlock } from "@/components/learner/learner-shell";
+import { SkeletonBlock } from "@/components/learner/learner-shell";
 import { useLearning } from "@/hooks/use-learning";
 import { useMyEnrollments } from "@/hooks/use-enrollments";
 import { useMe } from "@/hooks/use-auth";
@@ -61,7 +61,7 @@ export default function LearnerDashboardPage() {
   const activeEnrollments = (enrollments.data ?? []).filter((item) => item.status === "active").length;
 
   return (
-    <LearnerShell active="dashboard">
+    <>
       <div className="mx-auto w-full max-w-content px-5 py-8 sm:px-8 sm:py-12">
         <header className="border-b border-line pb-6">
           <h1 className="text-32 font-semibold tracking-[-0.022em] text-ink sm:text-40">
@@ -223,6 +223,6 @@ export default function LearnerDashboardPage() {
           </div>
         </section>
       </div>
-    </LearnerShell>
+    </>
   );
 }

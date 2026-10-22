@@ -30,7 +30,7 @@ export function PublicShell({ active, children }: PublicShellProps) {
         isCreator={me?.roles.includes("creator") ?? false}
         user={
           me
-            ? { displayName: me.displayName, email: me.email, avatarUrl: me.avatarUrl }
+            ? { id: me.id, displayName: me.displayName, email: me.email, avatarUrl: me.avatarUrl }
             : undefined
         }
       />

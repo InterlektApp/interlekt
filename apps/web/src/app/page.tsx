@@ -152,7 +152,7 @@ export default function LandingPage() {
                 className="text-money"
                 style={{ fontSize: 36, color: "var(--ink)", fontWeight: 600, letterSpacing: "-0.02em" }}
               >
-                {communitiesLoading ? "—" : totalCommunities.toLocaleString()}
+                {communitiesLoading || communitiesError ? "—" : totalCommunities.toLocaleString()}
               </div>
               <div className="text-sm muted" style={{ marginTop: 4 }}>
                 Live communities

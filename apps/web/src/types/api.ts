@@ -2,7 +2,7 @@
  * API types — mirror of the live Interlekt backend contract
  * (https://interlekt-backend.onrender.com/openapi.json, camelCase JSON).
  *
- * Generated against the live OpenAPI spec on 2026-10-21 and verified with
+ * Generated against the live OpenAPI spec on 2026-10-22 and verified with
  * live probes. Rules for this file:
  *
  *  1. A field exists here only if the backend returns it. Wire names are
@@ -119,15 +119,15 @@ export interface CreatorProfileResponse {
   expertise: string[];
   verificationStatus: VerificationStatus;
   isVerified: boolean;
-  /** Declared in the spec but NOT returned by the deployment. Optional. */
-  memberCount?: number;
+  /** Aggregate active members across the creator's published communities. */
+  memberCount: number;
   communityCount: number;
   createdAt: string;
-  /** @pending `GET/PUT /creators/me` — job title. */
+  /** `GET /creators/{userId}` and `GET/PUT /creators/me`. */
   headline?: string | null;
-  /** @pending `GET/PUT /creators/me` — cover banner. */
+  /** `GET /creators/{userId}` and `GET/PUT /creators/me`. */
   coverUrl?: string | null;
-  /** @pending `GET/PUT /creators/me` — social links. */
+  /** `GET /creators/{userId}` and `GET/PUT /creators/me`. */
   socialLinks?: Record<string, string> | null;
   /** @pending verification resource — when the creator was approved. */
   verifiedAt?: string | null;
